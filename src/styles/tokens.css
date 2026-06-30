@@ -1,0 +1,54 @@
+:root {
+  --page-bg: #ffffff;
+  --surface: #ffffff;
+  --surface-strong: #000000;
+  --paper: #fffdfa;
+  --paper-strong: #fff;
+  --ink: #111111;
+  --ink-soft: #37322d;
+  --ink-inverse: #ffffff;
+  --muted: #7f7b74;
+  --muted-strong: #b2b2b2;
+  --line: rgba(17, 17, 17, 0.11);
+  --pill-bg: #000000;
+  --pill-ink: #ffffff;
+  --pill-border: #e6e6e6;
+  --tooltip-bg: #232220;
+  --tooltip-ink: #ffffff;
+  --control-bg: #3a3837;
+  --control-active-bg: #262524;
+  --chip-bg: #111111;
+  --chip-ink: #ffffff;
+  --shadow-soft: 0 18px 44px rgba(17, 17, 17, 0.1);
+  --shadow-paper: 0 24px 40px rgba(17, 17, 17, 0.14);
+  --radius-pill: 8px;
+  --radius-card: 28px;
+  --sans: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
+  --display: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+}
+
+:root[data-theme='dark'] {
+  --page-bg: #232323;
+  --surface: #2c2b29;
+  --surface-strong: #f5f2ec;
+  --paper: #2c2b29;
+  --paper-strong: #232323;
+  --ink: #f5f2ec;
+  --ink-soft: rgba(245, 242, 236, 0.9);
+  --ink-inverse: #141414;
+  --muted: rgba(245, 242, 236, 0.56);
+  --muted-strong: rgba(245, 242, 236, 0.64);
+  --line: rgba(245, 242, 236, 0.12);
+  --pill-bg: #f5f2ec;
+  --pill-ink: #141414;
+  --pill-border: rgba(245, 242, 236, 0.18);
+  --tooltip-bg: #111111;
+  --tooltip-ink: #ffffff;
+  --control-bg: #4a4744;
+  --control-active-bg: #5c5853;
+  --chip-bg: #111111;
+  --chip-ink: #ffffff;
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.26);
+  --shadow-paper: 0 24px 40px rgba(0, 0, 0, 0.28);
+}
