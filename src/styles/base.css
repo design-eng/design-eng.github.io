@@ -1278,10 +1278,6 @@ code {
   overflow: visible;
 }
 
-.poster-card--active:has(.poster-flip-hitbox--active) {
-  filter: drop-shadow(0 28px 36px rgba(17, 17, 17, 0.22));
-}
-
 .poster-card__sheet,
 .poster-page__sheet {
   width: 100%;
@@ -1304,7 +1300,7 @@ code {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 20px 28px rgba(17, 17, 17, 0.18));
+  filter: none;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
@@ -1315,25 +1311,6 @@ code {
   inset: 0;
   overflow: visible;
   border-radius: 2px;
-}
-
-.poster-flip-hitbox {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  cursor: grab;
-  touch-action: pan-y;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.045) 0%,
-    rgba(255, 255, 255, 0) 18%,
-    rgba(255, 255, 255, 0) 82%,
-    rgba(255, 255, 255, 0.045) 100%
-  );
-}
-
-.poster-flip-hitbox--active {
-  cursor: grabbing;
 }
 
 .poster-flipbook {
@@ -1365,7 +1342,7 @@ code {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 22px 30px rgba(17, 17, 17, 0.2));
+  filter: none;
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
