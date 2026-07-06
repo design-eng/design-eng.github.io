@@ -1275,7 +1275,8 @@ code {
 }
 
 .poster-card--active {
-  overflow: visible;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .poster-card__sheet,
@@ -1309,19 +1310,28 @@ code {
 .poster-flip-shell {
   position: absolute;
   inset: 0;
-  overflow: visible;
+  overflow: hidden;
   border-radius: 2px;
+  contain: paint;
 }
 
 .poster-flipbook {
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.poster-flipbook .stf__parent,
+.poster-flipbook .stf__wrapper,
+.poster-flipbook .stf__block,
+.poster-flipbook .stf__item {
+  overflow: hidden;
 }
 
 .poster-page {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
