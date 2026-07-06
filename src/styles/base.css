@@ -1426,6 +1426,127 @@ code {
   }
 }
 
+@media (max-width: 1360px) {
+  .landing-shell {
+    --right-panel-width: clamp(360px, 31vw, 430px);
+  }
+
+  .hero-grid {
+    column-gap: clamp(32px, 4vw, 72px);
+  }
+
+  .hero-copy-layout {
+    column-gap: 72px;
+  }
+
+  .eyebrow-row {
+    margin-left: 84px;
+  }
+
+  .manifesto-body__row {
+    grid-template-columns: 92px 0 minmax(0, 1fr);
+  }
+
+  .hero-art-column__sticky {
+    gap: 2rem;
+  }
+
+  .poster-cluster {
+    min-height: 560px;
+    padding-top: 1.5rem;
+  }
+
+  .autograph-chip {
+    top: 34px;
+    left: -12px;
+  }
+
+  .poster-stack {
+    right: 24px;
+    width: 300px;
+    height: 440px;
+  }
+
+  .poster-stack__marks {
+    top: 8px;
+    left: -36px;
+  }
+}
+
+@media (max-width: 1220px) {
+  .landing-shell {
+    --right-panel-width: clamp(320px, 29vw, 360px);
+  }
+
+  .hero-grid {
+    column-gap: 28px;
+  }
+
+  .hero-copy-layout {
+    grid-template-columns: 36px minmax(0, 1fr);
+    column-gap: 40px;
+  }
+
+  .hero-rail {
+    gap: 240px;
+  }
+
+  .hero-rail__dot {
+    width: 54px;
+    transform: translateX(-26px);
+  }
+
+  .eyebrow-row {
+    margin-left: 48px;
+  }
+
+  .manifesto-body__row {
+    grid-template-columns: 60px 0 minmax(0, 1fr);
+  }
+
+  .manifesto-body__row p {
+    max-width: 58ch;
+  }
+
+  .top-bar--right {
+    width: 100%;
+  }
+
+  .vinyl-player--compact {
+    margin-top: -22px;
+    --player-width: 248px;
+    --player-height: 168px;
+    --disc-size: 132px;
+    --label-size: 56px;
+    --tonearm-pivot-top: 50px;
+    --tonearm-pivot-right: 26px;
+    --tonearm-arm-height: 98px;
+    --play-button-size: 48px;
+  }
+
+  .poster-cluster {
+    min-height: 500px;
+  }
+
+  .autograph-chip {
+    left: 8px;
+    top: 28px;
+  }
+
+  .poster-stack {
+    right: 6px;
+    top: 1.5rem;
+    width: 252px;
+    height: 372px;
+  }
+
+  .poster-stack__marks {
+    top: 8px;
+    left: -18px;
+    width: 32px;
+  }
+}
+
 @media (max-width: 1120px) {
   .hero-grid {
     grid-template-columns: 1fr;
