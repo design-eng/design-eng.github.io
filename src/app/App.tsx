@@ -24,6 +24,10 @@ import posterOrange from '../assets/poster-two.png';
 import posterBlack from '../assets/poster-five.png';
 import posterYellow from '../assets/poster-six.png';
 import posterGreen from '../assets/poster-seven.png';
+import arrowLeft from '../assets/arrowLeft.svg';
+import arrowLeftInactive from '../assets/arrowLeftInactive.svg';
+import arrowRight from '../assets/arrowRight.svg';
+import arrowRightInactive from '../assets/arrowRightInactive.svg';
 import tactileManifestLogo from '../assets/tactile-manifest-logo.png';
 import tactileManifestLogoDark from '../assets/tactile-manifest-logo-dark.svg';
 
@@ -241,6 +245,21 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getNearestMobilePanelFocus(shift: number): MobilePanelFocus {
+  return (
+    Object.entries(MOBILE_PANEL_SHIFTS) as [MobilePanelFocus, number][]
+  ).reduce(
+    (closest, [focus, candidateShift]) =>
+      Math.abs(candidateShift - shift) < Math.abs(closest.shift - shift)
+        ? { focus, shift: candidateShift }
+        : closest,
+    {
+      focus: 'balanced' as MobilePanelFocus,
+      shift: MOBILE_PANEL_SHIFTS.balanced
+    }
+  ).focus;
+}
+
 export function App() {
   const setAudioController = useLandingStore(
     (state) => state.setAudioController
@@ -248,11 +267,10 @@ export function App() {
   const setAudioStatus = useLandingStore((state) => state.setAudioStatus);
   const setMuted = useLandingStore((state) => state.setMuted);
   const [theme, setTheme] = useState<ThemeMode>('light');
-  const [mobilePanelFocus, setMobilePanelFocus] =
-    useState<MobilePanelFocus>('copy');
   const [mobilePanelShift, setMobilePanelShift] = useState(
     MOBILE_PANEL_SHIFTS.copy
   );
+  const [isMobileDividerDragging, setIsMobileDividerDragging] = useState(false);
   const [activeMobilePosterIndex, setActiveMobilePosterIndex] = useState(0);
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
   const [desktopPosterOverlayContainer, setDesktopPosterOverlayContainer] =
@@ -336,24 +354,6 @@ export function App() {
     setIsWaitlistModalOpen(true);
   };
 
-  const snapMobilePanelFocus = (shift: number) => {
-    const nearestFocus = (
-      Object.entries(MOBILE_PANEL_SHIFTS) as [MobilePanelFocus, number][]
-    ).reduce(
-      (closest, [focus, candidateShift]) =>
-        Math.abs(candidateShift - shift) < Math.abs(closest.shift - shift)
-          ? { focus, shift: candidateShift }
-          : closest,
-      {
-        focus: 'balanced' as MobilePanelFocus,
-        shift: MOBILE_PANEL_SHIFTS.balanced
-      }
-    );
-
-    setMobilePanelFocus(nearestFocus.focus);
-    setMobilePanelShift(nearestFocus.shift);
-  };
-
   const handleMobileDividerPointerDown = (
     event: ReactPointerEvent<HTMLButtonElement>
   ) => {
@@ -362,6 +362,7 @@ export function App() {
       startY: event.clientY,
       startShift: mobilePanelShift
     };
+    setIsMobileDividerDragging(true);
 
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -398,33 +399,41 @@ export function App() {
     }
 
     mobileDividerDragRef.current = null;
-    snapMobilePanelFocus(mobilePanelShift);
+    setIsMobileDividerDragging(false);
   };
 
   const handleMobileDividerPointerCancel = (
     event: ReactPointerEvent<HTMLButtonElement>
   ) => {
+    const dragState = mobileDividerDragRef.current;
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
     mobileDividerDragRef.current = null;
-    setMobilePanelShift(MOBILE_PANEL_SHIFTS[mobilePanelFocus]);
+    setIsMobileDividerDragging(false);
+
+    if (dragState) {
+      setMobilePanelShift(dragState.startShift);
+    }
   };
 
   const mobilePosterProgress =
     (MOBILE_PANEL_SHIFTS.copy - mobilePanelShift) /
     (MOBILE_PANEL_SHIFTS.copy - MOBILE_PANEL_SHIFTS.poster);
   const clampedMobilePosterProgress = clamp(mobilePosterProgress, 0, 1);
+  const mobilePanelFocus = getNearestMobilePanelFocus(mobilePanelShift);
   const activeHandleImage =
     theme === 'dark' ? handleImageDark : handleImage;
   const mobileStageStyle = {
     ['--mobile-panel-shift' as const]: `${mobilePanelShift}px`,
     ['--mobile-poster-progress' as const]: clampedMobilePosterProgress
   } as CSSProperties;
-  const showMobilePosterFooter =
-    mobilePanelFocus !== 'copy' ||
-    Math.abs(mobilePanelShift - MOBILE_PANEL_SHIFTS.copy) > 1;
+  const canGoToPreviousMobilePoster = activeMobilePosterIndex > 0;
+  const canGoToNextMobilePoster =
+    activeMobilePosterIndex < MOBILE_POSTER_ITEMS.length - 1;
+  const showMobilePosterFooter = clampedMobilePosterProgress > 0.18;
   const activeMobilePoster = MOBILE_POSTER_ITEMS[activeMobilePosterIndex];
   const activeMobilePosterQuote =
     MOBILE_POSTER_QUOTES[activeMobilePosterIndex] ?? MOBILE_POSTER_QUOTES[0];
@@ -542,7 +551,7 @@ export function App() {
   };
 
   const handleSelectPreviousMobilePoster = () => {
-    if (isMobilePosterFlipping) {
+    if (isMobilePosterFlipping || !canGoToPreviousMobilePoster) {
       return;
     }
 
@@ -550,7 +559,7 @@ export function App() {
   };
 
   const handleSelectNextMobilePoster = () => {
-    if (isMobilePosterFlipping) {
+    if (isMobilePosterFlipping || !canGoToNextMobilePoster) {
       return;
     }
 
@@ -586,7 +595,7 @@ export function App() {
                   paragraphs={manifestoParagraphs}
                   titleId="manifesto-title"
                 />
-                <SignatureBlock />
+                <SignatureBlock theme={theme} />
               </div>
             </div>
           </div>
@@ -616,6 +625,8 @@ export function App() {
         <div
           className={`mobile-stage${
             showMobilePosterFooter ? ' mobile-stage--poster-detail' : ''
+          }${
+            isMobileDividerDragging ? ' mobile-stage--dragging' : ''
           }`}
           style={mobileStageStyle}
         >
@@ -732,11 +743,23 @@ export function App() {
                   <div className="mobile-stage__poster-hero">
                     <button
                       type="button"
-                      className="mobile-stage__poster-nav mobile-stage__poster-nav--prev"
+                      className={`mobile-stage__poster-nav mobile-stage__poster-nav--prev${
+                        canGoToPreviousMobilePoster ? ' is-active' : ' is-inactive'
+                      }`}
                       aria-label="Show previous poster"
+                      disabled={!canGoToPreviousMobilePoster}
                       onClick={handleSelectPreviousMobilePoster}
                     >
-                      <span aria-hidden="true">←</span>
+                      <img
+                        className="mobile-stage__poster-nav-icon"
+                        src={
+                          canGoToPreviousMobilePoster
+                            ? arrowLeft
+                            : arrowLeftInactive
+                        }
+                        alt=""
+                        aria-hidden="true"
+                      />
                     </button>
 
                     <figure className="mobile-stage__poster-figure">
@@ -781,11 +804,23 @@ export function App() {
 
                     <button
                       type="button"
-                      className="mobile-stage__poster-nav mobile-stage__poster-nav--next"
+                      className={`mobile-stage__poster-nav mobile-stage__poster-nav--next${
+                        canGoToNextMobilePoster ? ' is-active' : ' is-inactive'
+                      }`}
                       aria-label="Show next poster"
+                      disabled={!canGoToNextMobilePoster}
                       onClick={handleSelectNextMobilePoster}
                     >
-                      <span aria-hidden="true">→</span>
+                      <img
+                        className="mobile-stage__poster-nav-icon"
+                        src={
+                          canGoToNextMobilePoster
+                            ? arrowRight
+                            : arrowRightInactive
+                        }
+                        alt=""
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
 

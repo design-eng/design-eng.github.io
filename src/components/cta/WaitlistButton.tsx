@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react';
-import waitlistImage from '../../assets/waitlist-image.png';
+import posterOrange from '../../assets/poster-two.png';
+import posterYellow from '../../assets/poster-six.png';
+import posterGreen from '../../assets/poster-seven.png';
 
 type WaitlistButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'topbar' | 'signature';
@@ -24,12 +26,23 @@ export function WaitlistButton({
         {isTopbar ? 'Join' : 'Join waitlist'}
       </span>
       {!isTopbar ? (
-        <img
-          className="waitlist-button__image"
-          src={waitlistImage}
-          alt=""
-          aria-hidden="true"
-        />
+        <span className="waitlist-button__poster-stack" aria-hidden="true">
+          <img
+            className="waitlist-button__poster waitlist-button__poster--orange"
+            src={posterOrange}
+            alt=""
+          />
+          <img
+            className="waitlist-button__poster waitlist-button__poster--yellow"
+            src={posterYellow}
+            alt=""
+          />
+          <img
+            className="waitlist-button__poster waitlist-button__poster--green"
+            src={posterGreen}
+            alt=""
+          />
+        </span>
       ) : null}
     </button>
   );

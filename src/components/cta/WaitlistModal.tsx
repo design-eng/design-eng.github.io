@@ -1,12 +1,9 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import type { CSSProperties } from 'react';
 import tactileManifestLogo from '../../assets/tactile-manifest-logo.png';
 import tactileManifestLogoDark from '../../assets/tactile-manifest-logo-dark.svg';
 import posterBlue from '../../assets/poster-one.png';
 import posterOrange from '../../assets/poster-two.png';
 import posterYellow from '../../assets/poster-six.png';
-import zigzagDarkImage from '../../assets/zigzag-dark.png';
-import zigzagImage from '../../assets/zigzag.png';
 import { WaitlistButton } from './WaitlistButton';
 
 type WaitlistModalProps = {
@@ -48,16 +45,7 @@ export function WaitlistModal({
 
       <Dialog.Portal>
         <Dialog.Content className="waitlist-modal__content">
-          <div
-            className="waitlist-modal__shell"
-            style={
-              {
-                '--waitlist-modal-zigzag': `url(${
-                  theme === 'dark' ? zigzagDarkImage : zigzagImage
-                })`
-              } as CSSProperties
-            }
-          >
+          <div className="waitlist-modal__shell">
             <div className="waitlist-modal__header">
               <Dialog.Close asChild>
                 <button
@@ -84,11 +72,6 @@ export function WaitlistModal({
                     src={poster.imageSrc}
                     alt=""
                   />
-                  {/* <img
-                    className="waitlist-modal__poster-zigzag"
-                    src={zigzagImage}
-                    alt=""
-                  /> */}
                 </figure>
               ))}
             </div>
@@ -127,9 +110,7 @@ export function WaitlistModal({
                 <span
                   className="waitlist-modal__field-check"
                   aria-hidden="true"
-                >
-                  ✓
-                </span>
+                />
               </label>
 
               <label className="waitlist-modal__checkbox-row">
