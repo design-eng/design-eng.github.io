@@ -9,6 +9,7 @@ type HeroCopyProps = {
   };
   paragraphs: ReactNode[];
   titleId?: string;
+  title?: ReactNode;
 };
 
 export function HeroTooltipTerm({ children }: { children: ReactNode }) {
@@ -47,15 +48,18 @@ export function HeroTooltipTerm({ children }: { children: ReactNode }) {
 export function HeroCopy({
   eyebrow,
   paragraphs,
-  titleId = 'manifesto-title'
+  titleId = 'manifesto-title',
+  title
 }: HeroCopyProps) {
   return (
     <section className="hero-copy">
       <h1 id={titleId} className="hero-title">
-        <span className="hero-title__accent">
-          Quod maxime placeat facere possimus, omnis <br /> dolorum fuga
-          expedita distinctio.
-        </span>
+        {title ?? (
+          <span className="hero-title__accent">
+            Quod maxime placeat facere possimus, omnis <br /> dolorum fuga
+            expedita distinctio.
+          </span>
+        )}
       </h1>
 
       <p className="eyebrow-row">
@@ -67,7 +71,7 @@ export function HeroCopy({
         {paragraphs.map((paragraph, index) => (
           <div key={index} className="manifesto-body__row">
             <span className="manifesto-body__shortcut">
-              {String(index + 1).padStart(3, '0')}
+              {String(index + 2).padStart(3, '0')}
             </span>
             <p>{paragraph}</p>
           </div>

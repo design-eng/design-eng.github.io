@@ -21,6 +21,10 @@
   --chip-ink: #ffffff;
   --shadow-soft: 0 18px 44px rgba(17, 17, 17, 0.1);
   --shadow-paper: 0 24px 40px rgba(17, 17, 17, 0.14);
+  --manifest-paper: #ffffff;
+  --manifest-art-page: #f5e8fb;
+  --manifest-copy: #171717;
+  --manifest-meta: #7d7d85;
   --radius-pill: 8px;
   --radius-card: 28px;
   --sans: 'Inter', 'Avenir Next', 'Segoe UI', sans-serif;
@@ -51,4 +55,8 @@
   --chip-ink: #ffffff;
   --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.26);
   --shadow-paper: 0 24px 40px rgba(0, 0, 0, 0.28);
+  --manifest-paper: #1d1d1f;
+  --manifest-art-page: #342739;
+  --manifest-copy: #f3f0eb;
+  --manifest-meta: rgba(243, 240, 235, 0.58);
 }

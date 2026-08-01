@@ -1,140 +1,198 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import tactileManifestLogo from '../../assets/tactile-manifest-logo.png';
-import tactileManifestLogoDark from '../../assets/tactile-manifest-logo-dark.svg';
-import posterBlue from '../../assets/poster-one.png';
-import posterOrange from '../../assets/poster-two.png';
-import posterYellow from '../../assets/poster-six.png';
-import { WaitlistButton } from './WaitlistButton';
+import { CheckIcon } from '@radix-ui/react-icons';
+import {
+  type CSSProperties,
+  type FormEvent,
+  type RefObject,
+  useEffect,
+  useState
+} from 'react';
 
 type WaitlistModalProps = {
-  desktopOverlayContainer?: HTMLElement | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
   theme: 'light' | 'dark';
 };
 
-const modalPosters = [
-  {
-    id: 'blue',
-    imageSrc: posterBlue,
-    className: 'waitlist-modal__poster waitlist-modal__poster--blue'
-  },
-  {
-    id: 'orange',
-    imageSrc: posterOrange,
-    className: 'waitlist-modal__poster waitlist-modal__poster--orange'
-  },
-  {
-    id: 'yellow',
-    imageSrc: posterYellow,
-    className: 'waitlist-modal__poster waitlist-modal__poster--yellow'
-  }
-] as const;
+type SubmitState = 'idle' | 'submitting' | 'success';
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function WaitlistModal({
-  desktopOverlayContainer,
   open,
   onOpenChange,
-  theme
+  returnFocusRef
 }: WaitlistModalProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [welcomeBundle, setWelcomeBundle] = useState(true);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitState, setSubmitState] = useState<SubmitState>('idle');
+  const [popoverPosition, setPopoverPosition] = useState<CSSProperties>();
+
+  const trimmedName = name.trim();
+  const trimmedEmail = email.trim();
+  const isNameValid = trimmedName.length > 1;
+  const isEmailValid = emailPattern.test(trimmedEmail);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      const trigger = returnFocusRef?.current;
+      if (!trigger || window.innerWidth <= 640) {
+        setPopoverPosition(undefined);
+        return;
+      }
+
+      const bounds = trigger.getBoundingClientRect();
+      setPopoverPosition({
+        '--waitlist-popover-left': `${bounds.left + bounds.width / 2 + 6.5}px`,
+        '--waitlist-popover-top': `${bounds.bottom + 19}px`
+      } as CSSProperties);
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open, returnFocusRef]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setHasSubmitted(true);
+
+    if (!isNameValid || !isEmailValid || submitState === 'submitting') return;
+
+    setSubmitState('submitting');
+    window.setTimeout(() => setSubmitState('success'), 650);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setHasSubmitted(false);
+      setSubmitState('idle');
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal container={desktopOverlayContainer ?? undefined}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+      <Dialog.Portal>
         <Dialog.Overlay className="waitlist-modal__overlay" />
       </Dialog.Portal>
 
       <Dialog.Portal>
-        <Dialog.Content className="waitlist-modal__content">
+        <Dialog.Content
+          className="waitlist-modal__content"
+          style={popoverPosition}
+          onCloseAutoFocus={(event) => {
+            if (!returnFocusRef?.current) return;
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }}
+        >
+          <div className="waitlist-modal__caret" aria-hidden="true" />
           <div className="waitlist-modal__shell">
-            <div className="waitlist-modal__header">
-              <Dialog.Close asChild>
-                <button
-                  type="button"
-                  className="waitlist-modal__close"
-                  aria-label="Close waitlist modal"
-                >
-                  <span aria-hidden="true">×</span>
-                </button>
-              </Dialog.Close>
-
-              <img
-                className="waitlist-modal__brand"
-                src={theme === 'dark' ? tactileManifestLogoDark : tactileManifestLogo}
-                alt="Tactile Manifesto beta"
-              />
-            </div>
-
-            <div className="waitlist-modal__posters" aria-hidden="true">
-              {modalPosters.map((poster) => (
-                <figure key={poster.id} className={poster.className}>
-                  <img
-                    className="waitlist-modal__poster-image"
-                    src={poster.imageSrc}
-                    alt=""
-                  />
-                </figure>
-              ))}
-            </div>
-
             <div className="waitlist-modal__intro">
               <Dialog.Title className="waitlist-modal__title">
-                Join our waitlist
+                {submitState === 'success' ? 'You’re on the list' : 'Join our waitlist'}
               </Dialog.Title>
               <Dialog.Description className="waitlist-modal__description">
-                Let&apos;s take you on this journey with us.
+                {submitState === 'success'
+                  ? 'We’ll keep you posted on what comes next.'
+                  : 'Let’s take you on this journey with us.'}
               </Dialog.Description>
             </div>
 
-            <form
-              className="waitlist-modal__form"
-              onSubmit={(event) => event.preventDefault()}
-            >
-              <label className="waitlist-modal__field">
-                <span className="sr-only">Full name</span>
-                <input
-                  className="waitlist-modal__input"
-                  type="text"
-                  name="name"
-                  defaultValue="Maersk David"
-                />
-              </label>
+            {submitState === 'success' ? (
+              <div className="waitlist-modal__success" role="status">
+                <span className="waitlist-modal__success-icon" aria-hidden="true">
+                  <CheckIcon />
+                </span>
+                <p>Thanks, {trimmedName}. Your place is saved.</p>
+                <Dialog.Close className="waitlist-modal__done" type="button">
+                  Done
+                </Dialog.Close>
+              </div>
+            ) : (
+              <form className="waitlist-modal__form" noValidate onSubmit={handleSubmit}>
+                <label className="waitlist-modal__field">
+                  <span className="sr-only">Full name</span>
+                  <input
+                    className="waitlist-modal__input"
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    placeholder="Full name"
+                    value={name}
+                    aria-invalid={hasSubmitted && !isNameValid}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </label>
 
-              <label className="waitlist-modal__field waitlist-modal__field--valid">
-                <span className="sr-only">Email address</span>
-                <input
-                  className="waitlist-modal__input"
-                  type="email"
-                  name="email"
-                  defaultValue="groupwork@tactile.so"
-                />
-                <span
-                  className="waitlist-modal__field-check"
-                  aria-hidden="true"
-                />
-              </label>
+                <label
+                  className={`waitlist-modal__field${
+                    isEmailValid ? ' waitlist-modal__field--valid' : ''
+                  }`}
+                >
+                  <span className="sr-only">Email address</span>
+                  <input
+                    className="waitlist-modal__input"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder="Email address"
+                    value={email}
+                    aria-invalid={hasSubmitted && !isEmailValid}
+                    aria-describedby={
+                      hasSubmitted && (!isNameValid || !isEmailValid)
+                        ? 'waitlist-form-error'
+                        : undefined
+                    }
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                  {isEmailValid ? (
+                    <span className="waitlist-modal__field-check" aria-hidden="true">
+                      <CheckIcon />
+                    </span>
+                  ) : null}
+                </label>
 
-              <label className="waitlist-modal__checkbox-row">
-                <input
-                  className="waitlist-modal__checkbox"
-                  type="checkbox"
-                  defaultChecked
-                />
-                <span>Send me the welcome bundle</span>
-              </label>
+                <label className="waitlist-modal__checkbox-row">
+                  <input
+                    className="waitlist-modal__checkbox"
+                    type="checkbox"
+                    checked={welcomeBundle}
+                    onChange={(event) => setWelcomeBundle(event.target.checked)}
+                  />
+                  <span>Send me the welcome bundle</span>
+                </label>
 
-              <button
-                type="button"
-                className="waitlist-modal__cancel"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </button>
+                <p
+                  id="waitlist-form-error"
+                  className="waitlist-modal__error"
+                  aria-live="polite"
+                >
+                  {hasSubmitted && (!isNameValid || !isEmailValid)
+                    ? 'Enter your full name and a valid email address.'
+                    : ''}
+                </p>
 
-              <WaitlistButton
-                variant="signature"
-                className="waitlist-modal__submit"
-              />
-            </form>
+                <button
+                  type="submit"
+                  className="waitlist-modal__submit"
+                  disabled={submitState === 'submitting'}
+                >
+                  {submitState === 'submitting' ? 'Joining…' : 'Join the waitlist'}
+                </button>
+              </form>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

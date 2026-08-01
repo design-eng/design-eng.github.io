@@ -1,35 +1,29 @@
 import {
   type CSSProperties,
+  type MouseEvent,
   type PointerEvent as ReactPointerEvent,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from 'react';
-import HTMLFlipBook from 'react-pageflip-enhanced';
 import { HeroCopy } from '../../components/hero/HeroCopy';
-import { TopBar } from '../../components/layout/TopBar';
-import { PosterStack } from '../../components/posters/PosterStack';
+import {
+  HomePosterStack,
+  type HomePosterId
+} from '../../components/home/HomePosterStack';
+import { PeelPosterCanvas } from '../../components/home/PeelPosterCanvas';
 import { SignatureBlock } from '../../components/signature/SignatureBlock';
-import { WaitlistButton } from '../../components/cta/WaitlistButton';
 import { WaitlistModal } from '../../components/cta/WaitlistModal';
-import { VinylPlayer } from '../../components/audio/VinylPlayer';
 import { useLandingStore } from '../../state/useLandingStore';
 import { createAudioController } from '../../lib/audio/audioController';
 import birdAudio from '../../assets/bird-audio.wav';
 import handleImage from '../../assets/handle.png';
 import handleImageDark from '../../assets/handle-dark.png';
-import posterBlue from '../../assets/poster-one.png';
-import posterOrange from '../../assets/poster-two.png';
-import posterBlack from '../../assets/poster-five.png';
-import posterYellow from '../../assets/poster-six.png';
-import posterGreen from '../../assets/poster-seven.png';
-import arrowLeft from '../../assets/arrowLeft.svg';
-import arrowLeftInactive from '../../assets/arrowLeftInactive.svg';
-import arrowRight from '../../assets/arrowRight.svg';
-import arrowRightInactive from '../../assets/arrowRightInactive.svg';
-import tactileManifestLogo from '../../assets/tactile-manifest-logo.png';
-import tactileManifestLogoDark from '../../assets/tactile-manifest-logo-dark.svg';
+import posterDreamers from '../../assets/home-poster-help-dreamers-web.png';
+import posterDemo from '../../assets/home-poster-demo-green-web.png';
+import posterProcess from '../../assets/home-poster-take-back-process-web.png';
+import posterSign from '../../assets/home-poster-sign-work-web.png';
+import tactileLogo from '../../assets/tactile-logo.png';
 
 const manifestoParagraphs = [
   <>
@@ -172,68 +166,73 @@ const manifestoParagraphs = [
   </>
 ];
 
-const stackItems = [
-  {
-    id: 'black-poster',
-    label: 'Widerständigen zählen',
-    imageSrc: posterBlack
-  },
-  {
-    id: 'blue-cover',
-    label: '21 August',
-    imageSrc: posterBlue
-  },
-  {
-    id: 'orange-sheet',
-    label: 'Brasa',
-    imageSrc: posterOrange
-  },
-  {
-    id: 'yellow-poster',
-    label: 'April + Mai 2024',
-    imageSrc: posterYellow
-  },
-  {
-    id: 'green-poster',
-    label: 'RoztoCza',
-    imageSrc: posterGreen
-  }
+const mobilePosters = [
+  { id: 'dreamers', label: "We're here to help dreamers dream", imageSrc: posterDreamers },
+  { id: 'demo', label: 'FRRR? product canvas', imageSrc: posterDemo },
+  { id: 'process', label: 'Take back the process', imageSrc: posterProcess },
+  { id: 'sign', label: 'Sign your work', imageSrc: posterSign }
 ] as const;
+
+const manifestoTitle = (
+  <>
+    The true experience design software:<br />
+    precision for an era of guesswork. All in code.
+  </>
+);
+
+const mobileManifestoTitle = (
+  <>
+    The true experience<br />
+    design software:<br />
+    precision for an era of<br />
+    guesswork. All in code.
+  </>
+);
 
 const THEME_STORAGE_KEY = 'tactile-landing-theme';
 
 type ThemeMode = 'light' | 'dark';
-type MobilePanelFocus = 'copy' | 'balanced' | 'poster';
-type FlipEvent = {
-  data: number;
-};
 
-type FlipStateEvent = {
-  data: 'user_fold' | 'fold_corner' | 'flipping' | 'read';
-};
+const manifestoPosterBackgrounds = {
+  purple: {
+    light: '#f5e4fb',
+    dark: '#463251'
+  },
+  orange: {
+    light: '#fff4ef',
+    dark: '#563a34'
+  },
+  blue: {
+    light: '#d6f3fd',
+    dark: '#263c51'
+  },
+  green: {
+    light: '#f1fce6',
+    dark: '#3c4f2e'
+  }
+} satisfies Record<HomePosterId, Record<ThemeMode, string>>;
 
-type FlipBookHandle = {
-  pageFlip: () => {
-    flipNext: (corner?: 'top' | 'bottom') => void;
-    flipPrev: (corner?: 'top' | 'bottom') => void;
-    getCurrentPageIndex: () => number;
-    turnToPage: (page: number) => void;
-  };
-};
+const MOBILE_HEADER_HEIGHT = 97;
+const MOBILE_DIVIDER_HEIGHT = 32;
+const MOBILE_COPY_MIN_HEIGHT = 291;
+const MOBILE_POSTER_MIN_HEIGHT = 214;
 
-const MOBILE_PANEL_SHIFTS: Record<MobilePanelFocus, number> = {
-  copy: 96,
-  balanced: 0,
-  poster: -120
-};
+function getMobileCopyMaxHeight() {
+  if (typeof window === 'undefined') {
+    return 509;
+  }
 
-const MOBILE_POSTER_ITEMS = [stackItems[1], stackItems[2], stackItems[3]];
-const MOBILE_POSTER_QUOTES = [
-  'Imagine if you interacted with products built with a little more intention everyday.',
-  'The prompt slot machine could not be enough. Substance is still the foundation of the creative spirit.',
-  'Let those who dream be empowered to dream more.'
-] as const;
-const MOBILE_POSTER_FLIP_TIME_MS = 1080;
+  return Math.max(
+    MOBILE_COPY_MIN_HEIGHT,
+    Math.min(
+      509,
+      window.innerHeight -
+        MOBILE_HEADER_HEIGHT -
+        MOBILE_DIVIDER_HEIGHT -
+        MOBILE_POSTER_MIN_HEIGHT
+    )
+  );
+}
 
 function getSystemTheme() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -245,21 +244,6 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getNearestMobilePanelFocus(shift: number): MobilePanelFocus {
-  return (
-    Object.entries(MOBILE_PANEL_SHIFTS) as [MobilePanelFocus, number][]
-  ).reduce(
-    (closest, [focus, candidateShift]) =>
-      Math.abs(candidateShift - shift) < Math.abs(closest.shift - shift)
-        ? { focus, shift: candidateShift }
-        : closest,
-    {
-      focus: 'balanced' as MobilePanelFocus,
-      shift: MOBILE_PANEL_SHIFTS.balanced
-    }
-  ).focus;
-}
-
 export function ManifestoPage() {
   const setAudioController = useLandingStore(
     (state) => state.setAudioController
@@ -267,29 +251,30 @@ export function ManifestoPage() {
   const setAudioStatus = useLandingStore((state) => state.setAudioStatus);
   const setMuted = useLandingStore((state) => state.setMuted);
   const [theme, setTheme] = useState<ThemeMode>('light');
-  const [mobilePanelShift, setMobilePanelShift] = useState(
-    MOBILE_PANEL_SHIFTS.copy
-  );
+  const [activeDesktopPoster, setActiveDesktopPoster] =
+    useState<HomePosterId>('purple');
+  const [mobileCopyHeight, setMobileCopyHeight] = useState(getMobileCopyMaxHeight);
   const [isMobileDividerDragging, setIsMobileDividerDragging] = useState(false);
-  const [activeMobilePosterIndex, setActiveMobilePosterIndex] = useState(0);
+  const [activeMobilePosterIndex, setActiveMobilePosterIndex] = useState(1);
+  const [mobileForegroundPosterIndex, setMobileForegroundPosterIndex] =
+    useState(3);
+  const [mobilePosterDragX, setMobilePosterDragX] = useState(0);
+  const [isMobilePosterPeeling, setIsMobilePosterPeeling] = useState(false);
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
-  const [desktopPosterOverlayContainer, setDesktopPosterOverlayContainer] =
-    useState<HTMLDivElement | null>(null);
-  const [renderMobilePosterTray, setRenderMobilePosterTray] = useState(true);
-  const [renderMobilePosterDetail, setRenderMobilePosterDetail] =
-    useState(false);
-  const [
-    isMobilePosterPanelTransitioning,
-    setIsMobilePosterPanelTransitioning
-  ] = useState(false);
-  const [isMobilePosterFlipping, setIsMobilePosterFlipping] = useState(false);
+  const waitlistReturnFocusRef = useRef<HTMLElement | null>(null);
   const mobileDividerDragRef = useRef<{
     pointerId: number;
     startY: number;
-    startShift: number;
+    startHeight: number;
+    lastY: number;
+    lastTime: number;
+    velocityY: number;
   } | null>(null);
-  const mobilePosterFlipBookRef = useRef<FlipBookHandle | null>(null);
-  const pendingMobilePosterLoopResetRef = useRef<number | null>(null);
+  const mobilePosterDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startTime: number;
+  } | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -325,6 +310,14 @@ export function ManifestoPage() {
   }, []);
 
   useEffect(() => {
+    document.body.classList.add('manifesto-page-open');
+
+    return () => {
+      document.body.classList.remove('manifesto-page-open');
+    };
+  }, []);
+
+  useEffect(() => {
     const controller = createAudioController({
       src: birdAudio,
       onStateChange: (status) => setAudioStatus(status),
@@ -340,27 +333,34 @@ export function ManifestoPage() {
   }, [setAudioController, setAudioStatus, setMuted]);
 
   const handleToggleTheme = () => {
-    setTheme((currentTheme) => {
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
-      document.documentElement.dataset.theme = nextTheme;
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-
-      return nextTheme;
-    });
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    setTheme(nextTheme);
   };
 
-  const handleOpenWaitlistModal = () => {
+  const manifestoPosterPaneStyle = {
+    '--manifest-active-poster-background':
+      manifestoPosterBackgrounds[activeDesktopPoster][theme]
+  } as CSSProperties;
+
+  const handleOpenWaitlistModal = (event: MouseEvent<HTMLButtonElement>) => {
+    waitlistReturnFocusRef.current = event.currentTarget;
     setIsWaitlistModalOpen(true);
   };
 
   const handleMobileDividerPointerDown = (
     event: ReactPointerEvent<HTMLButtonElement>
   ) => {
+    const now = performance.now();
     mobileDividerDragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
-      startShift: mobilePanelShift
+      startHeight: mobileCopyHeight,
+      lastY: event.clientY,
+      lastTime: now,
+      velocityY: 0
     };
     setIsMobileDividerDragging(true);
 
@@ -376,13 +376,19 @@ export function ManifestoPage() {
       return;
     }
 
-    const nextShift = clamp(
-      dragState.startShift + (event.clientY - dragState.startY),
-      MOBILE_PANEL_SHIFTS.poster,
-      MOBILE_PANEL_SHIFTS.copy
+    const nextHeight = clamp(
+      dragState.startHeight + (event.clientY - dragState.startY),
+      MOBILE_COPY_MIN_HEIGHT,
+      getMobileCopyMaxHeight()
     );
 
-    setMobilePanelShift(nextShift);
+    const now = performance.now();
+    dragState.velocityY =
+      (event.clientY - dragState.lastY) /
+      Math.max(now - dragState.lastTime, 1);
+    dragState.lastY = event.clientY;
+    dragState.lastTime = now;
+    setMobileCopyHeight(nextHeight);
   };
 
   const handleMobileDividerPointerUp = (
@@ -398,8 +404,18 @@ export function ManifestoPage() {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
+    const velocityY = dragState.velocityY;
+
     mobileDividerDragRef.current = null;
     setIsMobileDividerDragging(false);
+    setMobileCopyHeight((currentHeight) => {
+      const maxHeight = getMobileCopyMaxHeight();
+      const midpoint = (MOBILE_COPY_MIN_HEIGHT + maxHeight) / 2;
+
+      if (velocityY < -0.35) return MOBILE_COPY_MIN_HEIGHT;
+      if (velocityY > 0.35) return maxHeight;
+      return currentHeight < midpoint ? MOBILE_COPY_MIN_HEIGHT : maxHeight;
+    });
   };
 
   const handleMobileDividerPointerCancel = (
@@ -415,168 +431,125 @@ export function ManifestoPage() {
     setIsMobileDividerDragging(false);
 
     if (dragState) {
-      setMobilePanelShift(dragState.startShift);
+      setMobileCopyHeight(dragState.startHeight);
     }
   };
 
-  const mobilePosterProgress =
-    (MOBILE_PANEL_SHIFTS.copy - mobilePanelShift) /
-    (MOBILE_PANEL_SHIFTS.copy - MOBILE_PANEL_SHIFTS.poster);
-  const clampedMobilePosterProgress = clamp(mobilePosterProgress, 0, 1);
-  const mobilePanelFocus = getNearestMobilePanelFocus(mobilePanelShift);
   const activeHandleImage =
     theme === 'dark' ? handleImageDark : handleImage;
-  const mobileStageStyle = {
-    ['--mobile-panel-shift' as const]: `${mobilePanelShift}px`,
-    ['--mobile-poster-progress' as const]: clampedMobilePosterProgress
-  } as CSSProperties;
-  const canGoToPreviousMobilePoster = activeMobilePosterIndex > 0;
-  const canGoToNextMobilePoster =
-    activeMobilePosterIndex < MOBILE_POSTER_ITEMS.length - 1;
-  const showMobilePosterFooter = clampedMobilePosterProgress > 0.18;
-  const activeMobilePoster = MOBILE_POSTER_ITEMS[activeMobilePosterIndex];
-  const activeMobilePosterQuote =
-    MOBILE_POSTER_QUOTES[activeMobilePosterIndex] ?? MOBILE_POSTER_QUOTES[0];
-  const mobilePosterPages = useMemo(() => {
-    if (!MOBILE_POSTER_ITEMS.length) {
-      return [];
-    }
-
-    const firstPoster = MOBILE_POSTER_ITEMS[0];
-    const lastPoster = MOBILE_POSTER_ITEMS[MOBILE_POSTER_ITEMS.length - 1];
-
-    return [lastPoster, ...MOBILE_POSTER_ITEMS, firstPoster];
-  }, []);
-  const mobileRenderedPosterPages = useMemo(
-    () =>
-      mobilePosterPages.map((item, index) => (
-        <div key={`${item.id}-${index}`} className="mobile-stage__poster-page">
-          <div className="mobile-stage__poster-page-sheet">
-            <img
-              className="mobile-stage__poster-page-image"
-              src={item.imageSrc}
-              alt={item.label}
-              draggable={false}
-            />
-          </div>
-        </div>
-      )),
-    [mobilePosterPages]
+  const mobilePosterProgress = clamp(
+    (getMobileCopyMaxHeight() - mobileCopyHeight) /
+      (getMobileCopyMaxHeight() - MOBILE_COPY_MIN_HEIGHT || 1),
+    0,
+    1
   );
+  const mobileStageStyle = {
+    ['--mobile-copy-height' as const]: `${mobileCopyHeight}px`,
+    ['--mobile-poster-progress' as const]: mobilePosterProgress,
+    ['--mobile-carousel-drag-offset' as const]: `${
+      mobilePosterDragX * (1 - mobilePosterProgress)
+    }px`
+  } as CSSProperties;
+  const isMobilePosterExpanded = mobilePosterProgress >= 0.5;
+  const isMobilePosterPeelEnabled = mobilePosterProgress >= 0.98;
 
   useEffect(() => {
-    if (showMobilePosterFooter) {
-      const startTimeoutId = window.setTimeout(() => {
-        setRenderMobilePosterDetail(true);
-        setIsMobilePosterPanelTransitioning(true);
-      }, 0);
-
-      const endTimeoutId = window.setTimeout(() => {
-        setRenderMobilePosterTray(false);
-        setIsMobilePosterPanelTransitioning(false);
-      }, 280);
-
-      return () => {
-        window.clearTimeout(startTimeoutId);
-        window.clearTimeout(endTimeoutId);
-      };
-    }
-
-    const startTimeoutId = window.setTimeout(() => {
-      setRenderMobilePosterTray(true);
-      setIsMobilePosterPanelTransitioning(true);
-    }, 0);
-
-    const endTimeoutId = window.setTimeout(() => {
-      setRenderMobilePosterDetail(false);
-      setIsMobilePosterPanelTransitioning(false);
-    }, 280);
-
-    return () => {
-      window.clearTimeout(startTimeoutId);
-      window.clearTimeout(endTimeoutId);
+    const handleResize = () => {
+      setMobileCopyHeight((height) =>
+        clamp(height, MOBILE_COPY_MIN_HEIGHT, getMobileCopyMaxHeight())
+      );
     };
-  }, [showMobilePosterFooter]);
 
-  useEffect(() => {
-    const flipApi = mobilePosterFlipBookRef.current?.pageFlip();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-    if (!flipApi || pendingMobilePosterLoopResetRef.current !== null) {
-      return;
-    }
+  const handleMobilePosterPointerDown = (
+    event: ReactPointerEvent<HTMLDivElement>
+  ) => {
+    if (mobilePosterProgress > 0.08) return;
 
-    const expectedPage = activeMobilePosterIndex + 1;
-
-    if (flipApi.getCurrentPageIndex() !== expectedPage) {
-      flipApi.turnToPage(expectedPage);
-    }
-  }, [activeMobilePosterIndex]);
-
-  const handleMobilePosterFlip = (event: FlipEvent) => {
-    const pageIndex = event.data;
-    const lastSentinelPage = MOBILE_POSTER_ITEMS.length + 1;
-
-    if (pageIndex === 0) {
-      pendingMobilePosterLoopResetRef.current = MOBILE_POSTER_ITEMS.length;
-      setActiveMobilePosterIndex(MOBILE_POSTER_ITEMS.length - 1);
-      return;
-    }
-
-    if (pageIndex === lastSentinelPage) {
-      pendingMobilePosterLoopResetRef.current = 1;
-      setActiveMobilePosterIndex(0);
-      return;
-    }
-
-    pendingMobilePosterLoopResetRef.current = null;
-    setActiveMobilePosterIndex(pageIndex - 1);
+    mobilePosterDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startTime: performance.now()
+    };
+    setMobilePosterDragX(0);
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const handleMobilePosterFlipStateChange = (event: FlipStateEvent) => {
-    setIsMobilePosterFlipping(event.data === 'flipping');
-
-    if (
-      event.data !== 'read' ||
-      pendingMobilePosterLoopResetRef.current === null
-    ) {
-      return;
-    }
-
-    const resetPage = pendingMobilePosterLoopResetRef.current;
-    pendingMobilePosterLoopResetRef.current = null;
-
-    window.setTimeout(() => {
-      mobilePosterFlipBookRef.current?.pageFlip().turnToPage(resetPage);
-    }, 34);
+  const handleMobilePosterPointerMove = (
+    event: ReactPointerEvent<HTMLDivElement>
+  ) => {
+    const dragState = mobilePosterDragRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    setMobilePosterDragX(event.clientX - dragState.startX);
   };
 
-  const handleSelectPreviousMobilePoster = () => {
-    if (isMobilePosterFlipping || !canGoToPreviousMobilePoster) {
-      return;
+  const finishMobilePosterDrag = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    cancelled = false
+  ) => {
+    const dragState = mobilePosterDragRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    mobilePosterFlipBookRef.current?.pageFlip().flipPrev('top');
-  };
+    const elapsed = Math.max(performance.now() - dragState.startTime, 1);
+    const velocity = mobilePosterDragX / elapsed;
+    const shouldMove = Math.abs(mobilePosterDragX) > 46 || Math.abs(velocity) > 0.45;
 
-  const handleSelectNextMobilePoster = () => {
-    if (isMobilePosterFlipping || !canGoToNextMobilePoster) {
-      return;
+    if (!cancelled && shouldMove) {
+      setActiveMobilePosterIndex((currentIndex) =>
+        clamp(currentIndex + (mobilePosterDragX < 0 ? 1 : -1), 0, mobilePosters.length - 1)
+      );
     }
 
-    mobilePosterFlipBookRef.current?.pageFlip().flipNext('top');
+    mobilePosterDragRef.current = null;
+    setMobilePosterDragX(0);
   };
 
   return (
     <>
-      <main className="landing-shell landing-shell--desktop">
+      <main
+        className="landing-shell landing-shell--desktop"
+        style={manifestoPosterPaneStyle}
+      >
         <section className="hero-grid" aria-labelledby="manifesto-title">
-          <div className="hero-copy-pane">
-            <TopBar
-              side="left"
-              theme={theme}
-              onToggleTheme={handleToggleTheme}
-              onOpenWaitlist={handleOpenWaitlistModal}
-            />
+          <div
+            className="hero-copy-pane"
+            role="region"
+            aria-label="Manifesto text"
+            tabIndex={0}
+          >
+            <header className="manifesto-desktop-header">
+              <a className="manifesto-desktop-brand" href="/" aria-label="Tactile HCI home">
+                <span className="manifesto-desktop-brand__mark">
+                  <img src={tactileLogo} alt="" />
+                </span>
+                <span>Tactile HCI®</span>
+              </a>
+
+              <div className="manifesto-desktop-header__actions">
+                <button
+                  type="button"
+                  className="manifesto-theme-toggle"
+                  onClick={handleToggleTheme}
+                  aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                >
+                  {theme === 'dark' ? 'Light theme' : 'Dark theme'}
+                </button>
+                <button
+                  type="button"
+                  className="manifesto-waitlist-button"
+                  onClick={handleOpenWaitlistModal}
+                >
+                  Join the waitlist
+                </button>
+              </div>
+            </header>
 
             <div className="hero-copy-layout">
               <div className="hero-rail" aria-hidden="true">
@@ -591,85 +564,58 @@ export function ManifestoPage() {
 
               <div className="hero-copy-column">
                 <HeroCopy
-                  eyebrow={{ left: '12 MAY 2026', right: 'K10 PANEL' }}
+                  eyebrow={{ left: 'JUNE 5, 2026', right: 'K10 PANEL' }}
                   paragraphs={manifestoParagraphs}
                   titleId="manifesto-title"
+                  title={manifestoTitle}
                 />
                 <SignatureBlock theme={theme} />
               </div>
             </div>
           </div>
 
-          <aside className="hero-art-column" aria-label="Interactive media">
-            <div
-              ref={setDesktopPosterOverlayContainer}
-              className="hero-art-column__sticky"
-            >
-              <TopBar side="right" theme={theme} />
-              <PosterStack items={stackItems} />
+          <aside
+            className={`hero-art-column hero-art-column--${activeDesktopPoster}`}
+            aria-label="Interactive media"
+          >
+            <div className="hero-art-column__sticky">
+              <HomePosterStack
+                placement="manifesto"
+                activeId={activeDesktopPoster}
+                onActiveChange={setActiveDesktopPoster}
+              />
               <div className="landing-footer-bar">
-                <WaitlistButton
-                  variant="signature"
-                  onClick={handleOpenWaitlistModal}
-                />
-                <p className="footer-mark">©2026 Tactile Labs Inc.</p>
+                <p className="footer-mark">©2026 Tactile Interactive. All rights reserved.</p>
               </div>
             </div>
           </aside>
         </section>
       </main>
 
-      <section
-        className={`landing-shell-mobile landing-shell-mobile--${mobilePanelFocus}`}
-      >
+      <section className="landing-shell-mobile">
         <div
           className={`mobile-stage${
-            showMobilePosterFooter ? ' mobile-stage--poster-detail' : ''
+            isMobilePosterExpanded ? ' mobile-stage--poster-expanded' : ''
           }${
             isMobileDividerDragging ? ' mobile-stage--dragging' : ''
           }`}
           style={mobileStageStyle}
         >
           <header className="mobile-stage__header">
-            <div className="mobile-stage__header-row">
-              <img
-                className="mobile-stage__brand"
-                src={
-                  theme === 'dark'
-                    ? tactileManifestLogoDark
-                    : tactileManifestLogo
-                }
-                alt="Tactile Manifesto beta"
-              />
-              <div className="mobile-stage__player">
-                <VinylPlayer compact />
-              </div>
-            </div>
+            <a className="mobile-stage__brand" href="/" aria-label="Tactile HCI home">
+              <span className="mobile-stage__brand-mark">
+                <img src={tactileLogo} alt="" />
+              </span>
+              <span>Tactile HCI®</span>
+            </a>
 
-            <div className="mobile-stage__actions">
-              <img
-                className="hero-rail__dot mobile-stage__actions-dot"
-                src={activeHandleImage}
-                alt=""
-                aria-hidden="true"
-              />
-
-              <div className="mobile-stage__actions-group">
-                <button
-                  type="button"
-                  className="theme-toggle mobile-stage__theme-toggle"
-                  onClick={handleToggleTheme}
-                  aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                >
-                  {theme === 'dark' ? 'Light' : 'Dark'}
-                </button>
-
-                <WaitlistButton
-                  variant="topbar"
-                  onClick={handleOpenWaitlistModal}
-                />
-              </div>
-            </div>
+            <button
+              type="button"
+              className="mobile-stage__waitlist"
+              onClick={handleOpenWaitlistModal}
+            >
+              Join the waitlist
+            </button>
           </header>
 
           <div className="mobile-stage__panel-stack">
@@ -678,10 +624,17 @@ export function ManifestoPage() {
               aria-labelledby="manifesto-title-mobile"
             >
               <div className="mobile-stage__copy-scroll">
+                <img
+                  className="mobile-stage__copy-handle"
+                  src={activeHandleImage}
+                  alt=""
+                  aria-hidden="true"
+                />
                 <HeroCopy
-                  eyebrow={{ left: '12 MAY 2026', right: 'K10 PANEL' }}
+                  eyebrow={{ left: 'JUNE 5, 2026', right: 'K10 PANEL' }}
                   paragraphs={manifestoParagraphs}
                   titleId="manifesto-title-mobile"
+                  title={mobileManifestoTitle}
                 />
               </div>
             </section>
@@ -689,160 +642,131 @@ export function ManifestoPage() {
             <button
               type="button"
               className="mobile-stage__divider"
+              role="separator"
+              aria-orientation="horizontal"
               aria-label="Drag to resize copy and poster panels"
+              aria-valuemin={MOBILE_COPY_MIN_HEIGHT}
+              aria-valuemax={getMobileCopyMaxHeight()}
+              aria-valuenow={Math.round(mobileCopyHeight)}
+              aria-valuetext={
+                isMobilePosterExpanded
+                  ? 'Poster panel expanded'
+                  : 'Reading panel expanded'
+              }
               onPointerDown={handleMobileDividerPointerDown}
               onPointerMove={handleMobileDividerPointerMove}
               onPointerUp={handleMobileDividerPointerUp}
               onPointerCancel={handleMobileDividerPointerCancel}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowUp' || event.key === 'Home') {
+                  event.preventDefault();
+                  setMobileCopyHeight(MOBILE_COPY_MIN_HEIGHT);
+                }
+
+                if (event.key === 'ArrowDown' || event.key === 'End') {
+                  event.preventDefault();
+                  setMobileCopyHeight(getMobileCopyMaxHeight());
+                }
+              }}
             >
               <span className="mobile-stage__divider-handle" />
             </button>
 
-            <section
-              className={`mobile-stage__poster-panel${
-                showMobilePosterFooter
-                  ? ' mobile-stage__poster-panel--detail'
-                  : ' mobile-stage__poster-panel--initial'
-              }${
-                isMobilePosterPanelTransitioning
-                  ? ' mobile-stage__poster-panel--transitioning'
-                  : ''
-              }`}
-              aria-label="Poster tray"
-            >
-              {renderMobilePosterTray ? (
-                <>
-                  <div className="mobile-stage__poster-row">
-                    {MOBILE_POSTER_ITEMS.map((item, index) => (
+            <section className="mobile-stage__poster-panel" aria-label="Poster carousel">
+              <div
+                className="mobile-stage__poster-viewport"
+                onPointerDown={handleMobilePosterPointerDown}
+                onPointerMove={handleMobilePosterPointerMove}
+                onPointerUp={(event) => finishMobilePosterDrag(event)}
+                onPointerCancel={(event) => finishMobilePosterDrag(event, true)}
+              >
+                <div className="mobile-stage__poster-composition">
+                  {mobilePosters.map((_, slotIndex) => {
+                    const itemIndex =
+                      (mobileForegroundPosterIndex + 1 + slotIndex) %
+                      mobilePosters.length;
+                    const item = mobilePosters[itemIndex];
+                    const isForeground =
+                      slotIndex === mobilePosters.length - 1;
+
+                    return (
                       <button
-                        key={item.id}
+                        key={`${slotIndex}-${item.id}`}
                         type="button"
-                        className={`mobile-stage__poster-card${
-                          index === activeMobilePosterIndex ? ' is-active' : ''
-                        }`}
-                        aria-label={item.label}
-                        onClick={() => setActiveMobilePosterIndex(index)}
-                      >
-                        <img src={item.imageSrc} alt="" aria-hidden="true" />
-                      </button>
-                    ))}
-                  </div>
-
-                  <span
-                    className="mobile-stage__poster-indicator"
-                    aria-hidden="true"
-                  />
-                </>
-              ) : null}
-
-              {renderMobilePosterDetail ? (
-                <div
-                  className="mobile-stage__poster-detail"
-                  aria-hidden={!showMobilePosterFooter}
-                >
-                  <div className="mobile-stage__poster-hero">
-                    <button
-                      type="button"
-                      className={`mobile-stage__poster-nav mobile-stage__poster-nav--prev${
-                        canGoToPreviousMobilePoster ? ' is-active' : ' is-inactive'
-                      }`}
-                      aria-label="Show previous poster"
-                      disabled={!canGoToPreviousMobilePoster}
-                      onClick={handleSelectPreviousMobilePoster}
-                    >
-                      <img
-                        className="mobile-stage__poster-nav-icon"
-                        src={
-                          canGoToPreviousMobilePoster
-                            ? arrowLeft
-                            : arrowLeftInactive
-                        }
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    <figure className="mobile-stage__poster-figure">
-                      <article
-                        className={`mobile-stage__poster-active${
-                          isMobilePosterFlipping
-                            ? ' mobile-stage__poster-active--flipping'
+                        className={`mobile-stage__poster-card mobile-stage__poster-card--${
+                          slotIndex + 1
+                        }${isForeground ? ' is-active' : ''}${
+                          isForeground && isMobilePosterPeeling
+                            ? ' is-peeling'
                             : ''
                         }`}
-                        aria-label={`${activeMobilePoster.label} poster`}
+                        aria-label={`${item.label}${
+                          isForeground ? ', selected' : ''
+                        }`}
+                        onClick={() => {
+                          setActiveMobilePosterIndex(itemIndex);
+                          setMobileForegroundPosterIndex(itemIndex);
+                        }}
                       >
-                        <div className="mobile-stage__poster-flip-shell">
-                          <HTMLFlipBook
-                            ref={mobilePosterFlipBookRef}
-                            className="mobile-stage__poster-flipbook"
-                            width={152}
-                            height={220}
-                            size="fixed"
-                            drawShadow
-                            maxShadowOpacity={0.18}
-                            singlePage
-                            usePortrait={false}
-                            autoSize={false}
-                            showCover={false}
-                            showPageCorners={false}
-                            startZIndex={30}
-                            mobileScrollSupport={false}
-                            useMouseEvents={false}
-                            flippingTime={MOBILE_POSTER_FLIP_TIME_MS}
-                            startPage={activeMobilePosterIndex + 1}
-                            clickEventForward={false}
-                            disableFlipByClick
-                            onChangeState={handleMobilePosterFlipStateChange}
-                            onFlip={handleMobilePosterFlip}
-                            renderOnlyPageLengthChange
+                        <img
+                          className="mobile-stage__poster-card-image"
+                          src={item.imageSrc}
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                        />
+
+                        {isForeground && isMobilePosterPeelEnabled ? (
+                          <div
+                            className="home-poster-peel mobile-stage__poster-peel"
+                            aria-hidden="true"
                           >
-                            {mobileRenderedPosterPages}
-                          </HTMLFlipBook>
-                        </div>
-                      </article>
-                    </figure>
-
-                    <button
-                      type="button"
-                      className={`mobile-stage__poster-nav mobile-stage__poster-nav--next${
-                        canGoToNextMobilePoster ? ' is-active' : ' is-inactive'
-                      }`}
-                      aria-label="Show next poster"
-                      disabled={!canGoToNextMobilePoster}
-                      onClick={handleSelectNextMobilePoster}
-                    >
-                      <img
-                        className="mobile-stage__poster-nav-icon"
-                        src={
-                          canGoToNextMobilePoster
-                            ? arrowRight
-                            : arrowRightInactive
-                        }
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-
-                  <p className="mobile-stage__poster-quote">
-                    {activeMobilePosterQuote}
-                  </p>
-
-                  <WaitlistButton
-                    variant="signature"
-                    onClick={handleOpenWaitlistModal}
-                  />
+                            <PeelPosterCanvas
+                              imageSrc={item.imageSrc}
+                              width={173}
+                              height={245}
+                              interactionMode="touch"
+                              onComplete={() => {
+                                const nextPosterIndex =
+                                  (mobileForegroundPosterIndex + 1) %
+                                  mobilePosters.length;
+                                setMobileForegroundPosterIndex(nextPosterIndex);
+                                setActiveMobilePosterIndex(nextPosterIndex);
+                              }}
+                              onPeelingChange={setIsMobilePosterPeeling}
+                            />
+                          </div>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : null}
+              </div>
+
+              <div className="mobile-stage__pagination" aria-label="Choose poster">
+                {mobilePosters.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={index === activeMobilePosterIndex ? 'is-active' : ''}
+                    aria-label={`Show ${item.label}`}
+                    aria-current={index === activeMobilePosterIndex ? 'true' : undefined}
+                    onClick={() => {
+                      setActiveMobilePosterIndex(index);
+                      setMobileForegroundPosterIndex(index);
+                    }}
+                  />
+                ))}
+              </div>
             </section>
           </div>
         </div>
       </section>
 
       <WaitlistModal
-        desktopOverlayContainer={desktopPosterOverlayContainer}
         open={isWaitlistModalOpen}
         onOpenChange={setIsWaitlistModalOpen}
+        returnFocusRef={waitlistReturnFocusRef}
         theme={theme}
       />
     </>

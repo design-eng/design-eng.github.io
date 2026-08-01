@@ -1,15 +1,37 @@
 import {
+  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
+  type MouseEvent,
   useEffect,
   useId,
+  useRef,
   useState
 } from 'react';
+import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
 import tactileLogo from '../../assets/tactile-logo.png';
-import tactilePexels from '../../assets/tactile-pexels.png';
+import tactilePexelsPurple from '../../assets/tactile-pexels-purple.png';
+import tactilePexelsOrange from '../../assets/tactile-pexels-orange.png';
+import tactilePexelsBlue from '../../assets/tactile-pexels-blue.png';
+import tactilePexelsGreen from '../../assets/tactile-pexels-green.png';
+import tactilePexelsMobile from '../../assets/tactile-pexels.png';
+import tactilePexelsPurpleDark from '../../assets/tactile-pexels-purple-dark.png';
+import tactilePexelsOrangeDark from '../../assets/tactile-pexels-orange-dark.png';
+import tactilePexelsBlueDark from '../../assets/tactile-pexels-blue-dark.png';
+import tactilePexelsGreenDark from '../../assets/tactile-pexels-green-dark.png';
+import tactilePexelsPurpleDesktopDark from '../../assets/tactile-pexels-purple-desktop-dark.png';
+import tactilePexelsOrangeDesktopDark from '../../assets/tactile-pexels-orange-desktop-dark.png';
+import tactilePexelsBlueDesktopDark from '../../assets/tactile-pexels-blue-desktop-dark.png';
+import tactilePexelsGreenDesktopDark from '../../assets/tactile-pexels-green-desktop-dark.png';
 import { WaitlistModal } from '../../components/cta/WaitlistModal';
+import { AnimatedExperienceToken } from '../../components/home/AnimatedExperienceToken';
 import { HomeDemo } from '../../components/home/HomeDemo';
+import { MobileHomePosterStack } from '../../components/home/MobileHomePosterStack';
+import {
+  HomePosterStack,
+  type HomePosterId
+} from '../../components/home/HomePosterStack';
 
 const manifestPreviewSlides = [
   [
@@ -31,9 +53,92 @@ const manifestPreviewSlides = [
 ] as const;
 
 const MANIFEST_CAROUSEL_INTERVAL_MS = 6000;
+const THEME_STORAGE_KEY = 'tactile-landing-theme';
+
+type ThemeMode = 'light' | 'dark';
+
+function getInitialTheme(): ThemeMode {
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    return storedTheme;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
+const homePosterThemes = {
+  purple: {
+    paneColor: '#f8e7ff',
+    surfaceColor: '#f8e7ff',
+    darkPaneColor: '#463251',
+    darkSurfaceColor: '#4c3458',
+    pexelsSrc: tactilePexelsPurple,
+    darkDesktopPexelsSrc: tactilePexelsPurpleDesktopDark,
+    mobilePexelsSrc: tactilePexelsMobile,
+    darkMobilePexelsSrc: tactilePexelsPurpleDark
+  },
+  orange: {
+    paneColor: '#fff4ef',
+    surfaceColor: '#fff4ef',
+    darkPaneColor: '#563a34',
+    darkSurfaceColor: '#60403a',
+    pexelsSrc: tactilePexelsOrange,
+    darkDesktopPexelsSrc: tactilePexelsOrangeDesktopDark,
+    mobilePexelsSrc: tactilePexelsOrange,
+    darkMobilePexelsSrc: tactilePexelsOrangeDark
+  },
+  blue: {
+    paneColor: '#d6f3fd',
+    surfaceColor: '#dafaff',
+    darkPaneColor: '#263c51',
+    darkSurfaceColor: '#273f58',
+    pexelsSrc: tactilePexelsBlue,
+    darkDesktopPexelsSrc: tactilePexelsBlueDesktopDark,
+    mobilePexelsSrc: tactilePexelsBlue,
+    darkMobilePexelsSrc: tactilePexelsBlueDark
+  },
+  green: {
+    paneColor: '#f1fce6',
+    surfaceColor: '#f1fce6',
+    darkPaneColor: '#3c4f2e',
+    darkSurfaceColor: '#3f562f',
+    pexelsSrc: tactilePexelsGreen,
+    darkDesktopPexelsSrc: tactilePexelsGreenDesktopDark,
+    mobilePexelsSrc: tactilePexelsGreen,
+    darkMobilePexelsSrc: tactilePexelsGreenDark
+  }
+} satisfies Record<
+  HomePosterId,
+  {
+    paneColor: string;
+    surfaceColor: string;
+    darkPaneColor: string;
+    darkSurfaceColor: string;
+    pexelsSrc: string;
+    darkDesktopPexelsSrc: string;
+    mobilePexelsSrc: string;
+    darkMobilePexelsSrc: string;
+  }
+>;
 
 export function HomePage() {
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    window.matchMedia('(max-width: 620px)').matches
+  );
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
+  const waitlistReturnFocusRef = useRef<HTMLElement | null>(null);
+
+  const handleWaitlistOpen = (event: MouseEvent<HTMLButtonElement>) => {
+    waitlistReturnFocusRef.current = event.currentTarget;
+    setIsWaitlistModalOpen(true);
+  };
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeHomePoster, setActiveHomePoster] =
+    useState<HomePosterId>('purple');
   const [activeManifestSlide, setActiveManifestSlide] = useState(1);
   const [
     isManifestCarouselManuallyPaused,
@@ -45,10 +150,39 @@ export function HomePage() {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
   const manifestCarouselId = useId();
+  const mobileMenuId = useId();
   const discordInviteUrl =
     import.meta.env.VITE_DISCORD_INVITE_URL ?? 'https://discord.com/';
   const isManifestCarouselPaused =
     isManifestCarouselManuallyPaused || isManifestCarouselInteracting;
+  const activeHomeTheme = homePosterThemes[activeHomePoster];
+  const homePageStyle = {
+    '--home-pane-light-color': activeHomeTheme.paneColor,
+    '--home-surface-light-color': activeHomeTheme.surfaceColor,
+    '--home-pane-dark-color': activeHomeTheme.darkPaneColor,
+    '--home-surface-dark-color': activeHomeTheme.darkSurfaceColor
+  } as CSSProperties;
+
+  useEffect(() => {
+    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mobileQuery = window.matchMedia('(max-width: 620px)');
+    const applyStoredOrSystemTheme = () => setTheme(getInitialTheme());
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === THEME_STORAGE_KEY) applyStoredOrSystemTheme();
+    };
+    const handleMobileChange = () => setIsMobileViewport(mobileQuery.matches);
+
+    document.documentElement.dataset.theme = theme;
+    colorSchemeQuery.addEventListener('change', applyStoredOrSystemTheme);
+    mobileQuery.addEventListener('change', handleMobileChange);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      colorSchemeQuery.removeEventListener('change', applyStoredOrSystemTheme);
+      mobileQuery.removeEventListener('change', handleMobileChange);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [theme]);
 
   useEffect(() => {
     const reducedMotionQuery = window.matchMedia(
@@ -132,11 +266,17 @@ export function HomePage() {
 
   return (
     <>
-      <main className="home-page">
+      <main
+        className="home-page"
+        data-active-poster={activeHomePoster}
+        style={homePageStyle}
+      >
         <header className="home-header">
           <div className="home-header__identity">
             <Link className="home-brand" to="/" aria-label="Tactile HCI home">
-              <img className="home-brand__mark" src={tactileLogo} alt="" />
+              <span className="home-brand__mark-surface" aria-hidden="true">
+                <img className="home-brand__mark" src={tactileLogo} alt="" />
+              </span>
               <span className="home-brand__name">Tactile HCI®</span>
             </Link>
 
@@ -157,123 +297,226 @@ export function HomePage() {
             <button
               type="button"
               className="home-button home-button--primary"
-              onClick={() => setIsWaitlistModalOpen(true)}
+              onClick={handleWaitlistOpen}
             >
               Join the waitlist
             </button>
           </nav>
-        </header>
 
-        <div className="home-layout">
-          <section className="home-left" aria-labelledby="home-title">
-            <div className="home-hero-copy">
-              <h1 id="home-title">
-                The true experience design software: precision for an era of
-                guesswork. All in code, of course
-              </h1>
+          <div
+            className="home-mobile-menu"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setIsMobileMenuOpen(false);
+              }
+            }}
+          >
+            <button
+              type="button"
+              className="home-mobile-menu__button home-button home-button--secondary"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls={mobileMenuId}
+              onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
+            >
+              Menu
+            </button>
 
-              <div className="home-hero-copy__actions">
-                <button
-                  type="button"
-                  className="home-button home-button--primary"
-                  onClick={() => setIsWaitlistModalOpen(true)}
-                >
-                  Join the waitlist
-                </button>
+            {isMobileMenuOpen ? (
+              <nav
+                id={mobileMenuId}
+                className="home-mobile-menu__popover"
+                aria-label="Mobile navigation"
+              >
                 <Link
-                  className="home-button home-button--secondary"
                   to="/manifesto"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Read our manifest
                 </Link>
-              </div>
-            </div>
+                <a
+                  href={discordInviteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Join our Discord server
+                </a>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    setIsMobileMenuOpen(false);
+                    waitlistReturnFocusRef.current = event.currentTarget;
+                    setIsWaitlistModalOpen(true);
+                  }}
+                >
+                  Join the waitlist
+                </button>
+              </nav>
+            ) : null}
+          </div>
+        </header>
 
-            <div className="home-manifest-preview">
-              <div className="home-manifest-preview__label">
-                <p>Tactile Manifest</p>
-                <Link to="/manifesto">Read all</Link>
-              </div>
+        <HomePosterStack
+          activeId={activeHomePoster}
+          onActiveChange={setActiveHomePoster}
+        />
 
-              <div
-                id={`${manifestCarouselId}-carousel`}
-                className="home-manifest-preview__copy"
-                role="region"
-                aria-roledescription="carousel"
-                aria-label="Manifest highlights, auto-rotating"
-                onMouseEnter={() => setIsManifestCarouselInteracting(true)}
-                onMouseLeave={() => setIsManifestCarouselInteracting(false)}
-                onFocusCapture={() => setIsManifestCarouselInteracting(true)}
-                onBlurCapture={handleManifestCarouselBlur}
+        <div className="home-layout">
+          <section className="home-hero-copy" aria-labelledby="home-title">
+            <h1 id="home-title">
+              <span className="home-title__desktop-sr sr-only">
+                The true experience design software: precision for an era of
+                guesswork. All in code, of course
+              </span>
+              <span className="home-title__desktop" aria-hidden="true">
+                The true <AnimatedExperienceToken /> design software: precision
+                for an era of guesswork. All in code, of course
+              </span>
+              <span className="home-title__mobile-sr sr-only">
+                The true experience design software: precision for an era of
+                guesswork. All in code, of course.
+              </span>
+              <span className="home-title__mobile" aria-hidden="true">
+                <span>
+                  The true <AnimatedExperienceToken variant="mobile" />
+                </span>
+                <span>design software: precision</span>
+                <span>for an era of guesswork.</span>
+                <span>All in code, of course.</span>
+              </span>
+            </h1>
+
+            <div className="home-hero-copy__actions">
+              <button
+                type="button"
+                className="home-button home-button--primary"
+                onClick={handleWaitlistOpen}
               >
-                <div
-                  key={activeManifestSlide}
-                  className="home-manifest-preview__slide"
-                  role="group"
-                  aria-roledescription="slide"
-                  aria-label={`${activeManifestSlide + 1} of ${manifestPreviewSlides.length}`}
-                  aria-live={isManifestCarouselPaused ? 'polite' : 'off'}
-                >
-                  {manifestPreviewSlides[activeManifestSlide].map(
-                    (paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    )
-                  )}
-                </div>
-
-                <div
-                  className="home-manifest-preview__pagination"
-                  role="group"
-                  aria-label="Choose a manifest highlight"
-                  onKeyDown={handleManifestPaginationKeyDown}
-                >
-                  {manifestPreviewSlides.map((_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      className={
-                        index === activeManifestSlide ? 'is-active' : undefined
-                      }
-                      aria-label={
-                        index === activeManifestSlide
-                          ? isManifestCarouselManuallyPaused
-                            ? 'Resume automatic manifest rotation'
-                            : 'Pause automatic manifest rotation'
-                          : `Show manifest highlight ${index + 1} and pause automatic rotation`
-                      }
-                      title={
-                        index === activeManifestSlide
-                          ? isManifestCarouselManuallyPaused
-                            ? 'Resume automatic rotation'
-                            : 'Pause automatic rotation'
-                          : `Show manifest highlight ${index + 1}`
-                      }
-                      aria-controls={`${manifestCarouselId}-carousel`}
-                      aria-current={
-                        index === activeManifestSlide ? 'true' : undefined
-                      }
-                      aria-pressed={
-                        index === activeManifestSlide
-                          ? isManifestCarouselManuallyPaused
-                          : undefined
-                      }
-                      onClick={() => handleManifestPaginationClick(index)}
-                    />
-                  ))}
-                </div>
-              </div>
+                <span className="home-waitlist-label--desktop">
+                  Join the waitlist
+                </span>
+                <span className="home-waitlist-label--mobile">
+                  Join waitlist
+                </span>
+              </button>
+              <Link
+                className="home-button home-button--secondary"
+                to="/manifesto"
+              >
+                Read our manifest
+              </Link>
             </div>
-
-            <img
-              className="home-pexels"
-              src={tactilePexels}
-              alt="A Tactile selection interaction showing a cursor, handles, and dimension controls"
-            />
           </section>
+
+          <MobileHomePosterStack
+            activeId={activeHomePoster}
+            onActiveChange={setActiveHomePoster}
+          />
 
           <div className="home-demo-region">
             <HomeDemo />
           </div>
+
+          <section className="home-manifest-preview">
+            <div className="home-manifest-preview__label">
+              <div className="home-manifest-preview__label-heading">
+                <p>Tactile Manifest</p>
+                <Link
+                  className="home-manifest-preview__mobile-arrow"
+                  to="/manifesto"
+                  aria-label="Read the Tactile Manifest"
+                >
+                  <ArrowRightIcon />
+                </Link>
+              </div>
+              <Link to="/manifesto">Read all</Link>
+            </div>
+
+            <div
+              id={`${manifestCarouselId}-carousel`}
+              className="home-manifest-preview__copy"
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Manifest highlights, auto-rotating"
+              onMouseEnter={() => setIsManifestCarouselInteracting(true)}
+              onMouseLeave={() => setIsManifestCarouselInteracting(false)}
+              onFocusCapture={() => setIsManifestCarouselInteracting(true)}
+              onBlurCapture={handleManifestCarouselBlur}
+            >
+              <div
+                key={activeManifestSlide}
+                className="home-manifest-preview__slide"
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${activeManifestSlide + 1} of ${manifestPreviewSlides.length}`}
+                aria-live={isManifestCarouselPaused ? 'polite' : 'off'}
+              >
+                {manifestPreviewSlides[activeManifestSlide].map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+
+              <div
+                className="home-manifest-preview__pagination"
+                role="group"
+                aria-label="Choose a manifest highlight"
+                onKeyDown={handleManifestPaginationKeyDown}
+              >
+                {manifestPreviewSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={
+                      index === activeManifestSlide ? 'is-active' : undefined
+                    }
+                    aria-label={
+                      index === activeManifestSlide
+                        ? isManifestCarouselManuallyPaused
+                          ? 'Resume automatic manifest rotation'
+                          : 'Pause automatic manifest rotation'
+                        : `Show manifest highlight ${index + 1} and pause automatic rotation`
+                    }
+                    title={
+                      index === activeManifestSlide
+                        ? isManifestCarouselManuallyPaused
+                          ? 'Resume automatic rotation'
+                          : 'Pause automatic rotation'
+                        : `Show manifest highlight ${index + 1}`
+                    }
+                    aria-controls={`${manifestCarouselId}-carousel`}
+                    aria-current={
+                      index === activeManifestSlide ? 'true' : undefined
+                    }
+                    aria-pressed={
+                      index === activeManifestSlide
+                        ? isManifestCarouselManuallyPaused
+                        : undefined
+                    }
+                    onClick={() => handleManifestPaginationClick(index)}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <img
+            className="home-pexels home-pexels--desktop"
+            src={
+              theme === 'dark'
+                ? activeHomeTheme.darkDesktopPexelsSrc
+                : activeHomeTheme.pexelsSrc
+            }
+            alt="A Tactile selection interaction showing a cursor, handles, and dimension controls"
+          />
+          <img
+            className="home-pexels home-pexels--mobile"
+            src={
+              theme === 'dark' && isMobileViewport
+                ? activeHomeTheme.darkMobilePexelsSrc
+                : activeHomeTheme.mobilePexelsSrc
+            }
+            alt="A Tactile selection interaction showing a cursor, handles, and dimension controls"
+          />
         </div>
 
         <footer className="home-footer">
@@ -287,7 +530,8 @@ export function HomePage() {
       <WaitlistModal
         open={isWaitlistModalOpen}
         onOpenChange={setIsWaitlistModalOpen}
-        theme="light"
+        returnFocusRef={waitlistReturnFocusRef}
+        theme={theme}
       />
     </>
   );

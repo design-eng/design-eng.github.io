@@ -95,10 +95,6 @@ export function HomeDemo() {
   }, []);
 
   const openShowcaseMenu = useCallback(() => {
-    if (window.matchMedia('(max-width: 900px)').matches) {
-      return;
-    }
-
     setIsShowcaseMenuOpen(true);
   }, []);
 
@@ -122,6 +118,7 @@ export function HomeDemo() {
     const prefersReducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches;
+    const isMobileLayout = window.matchMedia('(max-width: 620px)').matches;
     let initialPlayback: gsap.core.Tween | null = null;
 
     const context = gsap.context(() => {
@@ -191,8 +188,24 @@ export function HomeDemo() {
           ease: 'sine.inOut'
         });
 
-      timeline.progress(1).pause();
-      syncProgress(1);
+      const initialProgress = isMobileLayout ? 0.252 : 1;
+      timeline.progress(initialProgress).pause();
+      syncProgress(initialProgress);
+
+      if (isMobileLayout) {
+        if (layerValueRef.current) {
+          layerValueRef.current.textContent = '395';
+        }
+
+        if (propertyValueRef.current) {
+          propertyValueRef.current.textContent = '10884';
+        }
+
+        if (mountedValueRef.current) {
+          mountedValueRef.current.textContent = '.isMounted';
+        }
+      }
+
       timelineRef.current = timeline;
 
       if (prefersReducedMotion) {
@@ -251,22 +264,6 @@ export function HomeDemo() {
       }
     };
   }, [openShowcaseMenu]);
-
-  useEffect(() => {
-    const responsiveQuery = window.matchMedia('(max-width: 900px)');
-    const handleResponsiveChange = (event: MediaQueryListEvent) => {
-      if (event.matches) {
-        closeMenus();
-        menuShownThisCycleRef.current = false;
-      }
-    };
-
-    responsiveQuery.addEventListener('change', handleResponsiveChange);
-
-    return () => {
-      responsiveQuery.removeEventListener('change', handleResponsiveChange);
-    };
-  }, [closeMenus]);
 
   const handleScrubStart = () => {
     wasPlayingBeforeScrubRef.current = isPlayingRef.current;
