@@ -6,6 +6,7 @@ import {
   useRef,
   useState
 } from 'react';
+import { Link } from 'react-router-dom';
 import { HeroCopy } from '../../components/hero/HeroCopy';
 import {
   HomePosterStack,
@@ -525,12 +526,12 @@ export function ManifestoPage() {
             tabIndex={0}
           >
             <header className="manifesto-desktop-header">
-              <a className="manifesto-desktop-brand" href="/" aria-label="Tactile HCI home">
+              <Link className="manifesto-desktop-brand" to="/" aria-label="Tactile HCI home">
                 <span className="manifesto-desktop-brand__mark">
                   <img src={tactileLogo} alt="" />
                 </span>
                 <span>Tactile HCI®</span>
-              </a>
+              </Link>
 
               <div className="manifesto-desktop-header__actions">
                 <button
@@ -602,12 +603,12 @@ export function ManifestoPage() {
           style={mobileStageStyle}
         >
           <header className="mobile-stage__header">
-            <a className="mobile-stage__brand" href="/" aria-label="Tactile HCI home">
+            <Link className="mobile-stage__brand" to="/" aria-label="Tactile HCI home">
               <span className="mobile-stage__brand-mark">
                 <img src={tactileLogo} alt="" />
               </span>
               <span>Tactile HCI®</span>
-            </a>
+            </Link>
 
             <button
               type="button"
