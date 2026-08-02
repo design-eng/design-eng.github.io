@@ -26,7 +26,7 @@ import tactilePexelsBlueDesktopDark from '../../assets/tactile-pexels-blue-deskt
 import tactilePexelsGreenDesktopDark from '../../assets/tactile-pexels-green-desktop-dark.png';
 import { WaitlistModal } from '../../components/cta/WaitlistModal';
 import { AnimatedExperienceToken } from '../../components/home/AnimatedExperienceToken';
-import { HomeDemo } from '../../components/home/HomeDemo';
+// import { HomeDemo } from '../../components/home/HomeDemo';
 import { MobileHomePosterStack } from '../../components/home/MobileHomePosterStack';
 import {
   HomePosterStack,
@@ -126,8 +126,8 @@ const homePosterThemes = {
 
 export function HomePage() {
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
-  const [isMobileViewport, setIsMobileViewport] = useState(() =>
-    window.matchMedia('(max-width: 620px)').matches
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.matchMedia('(max-width: 620px)').matches
   );
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
   const waitlistReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -146,8 +146,8 @@ export function HomePage() {
   ] = useState(false);
   const [isManifestCarouselInteracting, setIsManifestCarouselInteracting] =
     useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
   const manifestCarouselId = useId();
   const mobileMenuId = useId();
@@ -209,8 +209,7 @@ export function HomePage() {
 
     const intervalId = window.setInterval(() => {
       setActiveManifestSlide(
-        (currentSlide) =>
-          (currentSlide + 1) % manifestPreviewSlides.length
+        (currentSlide) => (currentSlide + 1) % manifestPreviewSlides.length
       );
     }, MANIFEST_CAROUSEL_INTERVAL_MS);
 
@@ -291,7 +290,10 @@ export function HomePage() {
           </div>
 
           <nav className="home-header__actions" aria-label="Primary navigation">
-            <Link className="home-button home-button--secondary" to="/manifesto">
+            <Link
+              className="home-button home-button--secondary"
+              to="/manifesto"
+            >
               Read our manifest
             </Link>
             <button
@@ -412,10 +414,10 @@ export function HomePage() {
             activeId={activeHomePoster}
             onActiveChange={setActiveHomePoster}
           />
-
+          {/* 
           <div className="home-demo-region">
             <HomeDemo />
-          </div>
+          </div> */}
 
           <section className="home-manifest-preview">
             <div className="home-manifest-preview__label">

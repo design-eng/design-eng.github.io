@@ -16,6 +16,8 @@ type PeelPosterCanvasProps = {
   height: number;
   interactionMode?: 'pointer' | 'touch';
   playInitialCue?: boolean;
+  completionThreshold?: number;
+  completionVelocity?: number;
   onInitialCueComplete?: () => void;
   onComplete: () => void;
   onPeelingChange: (isPeeling: boolean) => void;
@@ -188,6 +190,8 @@ export function PeelPosterCanvas({
   height,
   interactionMode = 'pointer',
   playInitialCue = false,
+  completionThreshold = 0.42,
+  completionVelocity = Number.POSITIVE_INFINITY,
   onInitialCueComplete,
   onComplete,
   onPeelingChange
@@ -198,6 +202,7 @@ export function PeelPosterCanvas({
   const hoveringEdgeRef = useRef(false);
   const suppressHoverUntilLeaveRef = useRef(false);
   const isCompletingGestureRef = useRef(false);
+  const gestureStartRef = useRef<{ x: number; time: number } | null>(null);
   const progressRef = useRef(0);
   const [progressState, setProgressState] = useState({
     imageSrc,
@@ -310,6 +315,7 @@ export function PeelPosterCanvas({
     hoveringEdgeRef.current = false;
     suppressHoverUntilLeaveRef.current = true;
     isCompletingGestureRef.current = false;
+    gestureStartRef.current = null;
   }, [imageSrc]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -339,6 +345,10 @@ export function PeelPosterCanvas({
       // native pointer to capture; the gesture can still be inspected.
     }
     setGrabY(pointer.y);
+    gestureStartRef.current = {
+      x: pointer.x,
+      time: performance.now()
+    };
     updateProgress(Math.max(0.025, pointer.x * 0.92));
     setIsDragging(true);
     onPeelingChange(true);
@@ -401,7 +411,22 @@ export function PeelPosterCanvas({
     window.setTimeout(() => keyboardRegion?.blur(), 0);
     setIsDragging(false);
 
-    if (progressRef.current >= 0.42) {
+    const gestureStart = gestureStartRef.current;
+    const elapsedSeconds = gestureStart
+      ? Math.max((performance.now() - gestureStart.time) / 1000, 0.001)
+      : Number.POSITIVE_INFINITY;
+    const outwardVelocity = gestureStart
+      ? (progressRef.current - gestureStart.x) / elapsedSeconds
+      : 0;
+    const hasIntentionalVelocity =
+      progressRef.current >= 0.16 && outwardVelocity >= completionVelocity;
+
+    gestureStartRef.current = null;
+
+    if (
+      progressRef.current >= completionThreshold ||
+      hasIntentionalVelocity
+    ) {
       isCompletingGestureRef.current = true;
       animateProgress(1.16, () => {
         onComplete();
