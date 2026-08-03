@@ -14,7 +14,7 @@ export function AnimatedExperienceToken({
   const tileSize = variant === 'mobile' ? 36 : 46;
   const tileGap = variant === 'mobile' ? 8 : 10;
   const finalWidth = tileSize * 3 + tileGap * 2;
-  const finalMarginLeft = variant === 'mobile' ? 7 : 10;
+  const finalMarginLeft = variant === 'mobile' ? 7 : 15;
   const finalMarginRight = variant === 'mobile' ? 8 : 18;
   const tilePillHeight = variant === 'mobile' ? 12 : 15;
   const tilePillTop = (tileSize - tilePillHeight) / 2;

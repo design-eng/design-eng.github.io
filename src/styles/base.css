@@ -317,6 +317,10 @@ code {
   pointer-events: none;
 }
 
+.experience-token--desktop .experience-token__tiles {
+  transform: translateY(2px);
+}
+
 .experience-token__tile {
   position: absolute;
   top: 0;
@@ -1391,6 +1395,10 @@ code {
     display: block;
   }
 
+  .home-title__mobile > span:first-child {
+    word-spacing: 0.06em;
+  }
+
   .home-title__mobile-sr {
     display: block;
   }
@@ -1543,6 +1551,7 @@ code {
 
   .experience-token--mobile .experience-token__tiles {
     width: 100%;
+    transform: translateY(6px);
   }
 
   .experience-token--mobile .experience-token__tile,
