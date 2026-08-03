@@ -1050,9 +1050,7 @@ code {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
-:root[data-theme='dark']
-  .home-manifest-preview__pagination
-  button::before {
+:root[data-theme='dark'] .home-manifest-preview__pagination button::before {
   background: #55565a;
 }
 
@@ -1267,13 +1265,11 @@ code {
     overflow: visible;
   }
 
-  .home-mobile-poster-showcase.is-peeling
-    .home-mobile-poster__active-image {
+  .home-mobile-poster-showcase.is-peeling .home-mobile-poster__active-image {
     opacity: 0;
   }
 
-  .home-mobile-poster-showcase:focus-visible
-    .home-mobile-poster--active {
+  .home-mobile-poster-showcase:focus-visible .home-mobile-poster--active {
     outline: 2px solid #007aff;
     outline-offset: 5px;
   }
@@ -1521,13 +1517,11 @@ code {
     overflow: visible;
   }
 
-  .home-mobile-poster-showcase.is-peeling
-    .home-mobile-poster__active-image {
+  .home-mobile-poster-showcase.is-peeling .home-mobile-poster__active-image {
     opacity: 0;
   }
 
-  .home-mobile-poster-showcase:focus-visible
-    .home-mobile-poster--active {
+  .home-mobile-poster-showcase:focus-visible .home-mobile-poster--active {
     outline: 2px solid #007aff;
     outline-offset: 5px;
   }
@@ -1544,7 +1538,7 @@ code {
 
   .experience-token--mobile .experience-token__word {
     line-height: 42px;
-    transform: translateY(5px);
+    transform: translateY(4px);
   }
 
   .experience-token--mobile .experience-token__tiles {
@@ -1769,9 +1763,7 @@ code {
     box-shadow: none;
   }
 
-  :root[data-theme='dark']
-    .home-hero-copy__actions
-    .home-button--secondary {
+  :root[data-theme='dark'] .home-hero-copy__actions .home-button--secondary {
     border-color: #ffffff;
     background: #ffffff;
     color: #222326;
@@ -1793,9 +1785,7 @@ code {
     background: #343539;
   }
 
-  :root[data-theme='dark']
-    .home-manifest-preview__pagination
-    button::before {
+  :root[data-theme='dark'] .home-manifest-preview__pagination button::before {
     background: #55565a;
   }
 
@@ -1814,6 +1804,18 @@ code {
   :root[data-theme='dark'] .home-footer p {
     color: #ffffff;
     font-size: 14px;
+  }
+}
+
+@media (min-width: 370px) and (max-width: 410px) {
+  .experience-token--mobile .experience-token__word {
+    transform: translateY(5px);
+  }
+}
+
+@media (min-width: 400px) and (max-width: 450px) {
+  .experience-token--mobile .experience-token__word {
+    transform: translateY(3px);
   }
 }
 
@@ -4514,8 +4516,8 @@ code {
     display: block;
     height: 100dvh;
     min-height: 0;
-    background: #ffffff;
-    color: #171717;
+    background: var(--manifest-paper);
+    color: var(--manifest-copy);
     overflow: hidden;
   }
 
@@ -4526,7 +4528,7 @@ code {
     height: 100%;
     min-height: 0;
     padding: 0;
-    background: #ffffff;
+    background: var(--manifest-paper);
     overflow: hidden;
   }
 
@@ -4540,7 +4542,7 @@ code {
     gap: 18px;
     margin: 0;
     padding: 35px 19px 0 17px;
-    background: #ffffff;
+    background: var(--manifest-paper);
   }
 
   .mobile-stage__brand {
@@ -4550,7 +4552,7 @@ code {
     align-items: center;
     gap: 8px;
     margin: 0;
-    color: #171717;
+    color: var(--manifest-copy);
     font-family: 'SF Pro Display', var(--sans);
     font-size: 14px;
     font-weight: 700;
@@ -4565,7 +4567,7 @@ code {
     height: 34px;
     flex: 0 0 auto;
     border-radius: 18px;
-    background: #f6e1ff;
+    background: var(--manifest-art-page);
     overflow: hidden;
   }
 
@@ -4606,9 +4608,10 @@ code {
   .mobile-stage__copy-panel {
     flex: 0 0 var(--mobile-copy-height);
     min-height: 0;
-    border-radius: 0 0 var(--manifest-mobile-radius) var(--manifest-mobile-radius);
-    background: #ffffff;
-    color: #171717;
+    border-radius: 0 0 var(--manifest-mobile-radius)
+      var(--manifest-mobile-radius);
+    background: var(--manifest-paper);
+    color: var(--manifest-copy);
     overflow: hidden;
     transition: flex-basis 300ms cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -4634,7 +4637,7 @@ code {
   .mobile-stage__copy-panel .hero-title {
     max-width: none;
     margin: 0;
-    color: #171717;
+    color: var(--manifest-copy);
     font-family: 'SF Pro Display', var(--sans);
     font-size: 32px;
     font-weight: 600;
@@ -4648,7 +4651,7 @@ code {
     justify-content: space-between;
     gap: 16px;
     margin: 25px 0 0;
-    color: #a4a4a8;
+    color: var(--manifest-meta);
     font-size: 13px;
     font-weight: 400;
     line-height: 16px;
@@ -4660,7 +4663,7 @@ code {
     display: grid;
     gap: 24px;
     margin-top: 28px;
-    color: #292929;
+    color: var(--manifest-copy);
     font-family: 'SF Pro Display', var(--sans);
     font-size: 15.5px;
     font-weight: 400;
@@ -4684,7 +4687,7 @@ code {
     position: absolute;
     top: 0;
     left: 0;
-    color: #a4a4a8;
+    color: var(--manifest-meta);
     font-size: 14px;
     line-height: 24px;
     letter-spacing: 0;
@@ -4731,8 +4734,9 @@ code {
     flex: 1 1 auto;
     min-height: 0;
     padding: 0;
-    border-radius: var(--manifest-mobile-radius) var(--manifest-mobile-radius) 0 0;
-    background: #ffffff;
+    border-radius: var(--manifest-mobile-radius) var(--manifest-mobile-radius) 0
+      0;
+    background: var(--manifest-paper);
     overflow: hidden;
   }
 
@@ -4780,10 +4784,7 @@ code {
             var(--poster-inline-offset) +
             var(--mobile-carousel-drag-offset, 0px)
         ),
-        calc(
-          39px + var(--poster-block-offset) +
-            39px * var(--poster-progress)
-        ),
+        calc(39px + var(--poster-block-offset) + 39px * var(--poster-progress)),
         0
       )
       rotate(calc(-4deg * var(--poster-progress)));
@@ -4793,14 +4794,10 @@ code {
     z-index: 2;
     transform: translate3d(
       calc(
-        94px + 44px * var(--poster-progress) +
-          var(--poster-inline-offset) +
+        94px + 44px * var(--poster-progress) + var(--poster-inline-offset) +
           var(--mobile-carousel-drag-offset, 0px)
       ),
-      calc(
-        39px + var(--poster-block-offset) -
-          5px * var(--poster-progress)
-      ),
+      calc(39px + var(--poster-block-offset) - 5px * var(--poster-progress)),
       0
     );
   }
@@ -4813,10 +4810,7 @@ code {
             var(--poster-inline-offset) +
             var(--mobile-carousel-drag-offset, 0px)
         ),
-        calc(
-          39px + var(--poster-block-offset) +
-            21px * var(--poster-progress)
-        ),
+        calc(39px + var(--poster-block-offset) + 21px * var(--poster-progress)),
         0
       )
       rotate(calc(5deg * var(--poster-progress)));
@@ -4826,14 +4820,10 @@ code {
     z-index: 4;
     transform: translate3d(
       calc(
-        312px - 193px * var(--poster-progress) +
-          var(--poster-inline-offset) +
+        312px - 193px * var(--poster-progress) + var(--poster-inline-offset) +
           var(--mobile-carousel-drag-offset, 0px)
       ),
-      calc(
-        39px + var(--poster-block-offset) +
-          19px * var(--poster-progress)
-      ),
+      calc(39px + var(--poster-block-offset) + 19px * var(--poster-progress)),
       0
     );
   }
@@ -4900,6 +4890,19 @@ code {
 
   .mobile-stage__pagination button.is-active {
     background: #26262a;
+  }
+
+  :root[data-theme='dark'] .mobile-stage__waitlist {
+    background: #f5f2ec;
+    color: #141414;
+  }
+
+  :root[data-theme='dark'] .mobile-stage__pagination button {
+    background: rgba(243, 240, 235, 0.32);
+  }
+
+  :root[data-theme='dark'] .mobile-stage__pagination button.is-active {
+    background: #f3f0eb;
   }
 
   .mobile-stage--dragging .mobile-stage__copy-panel,
@@ -5003,10 +5006,7 @@ code {
     width: 68px;
     height: 34px;
     border-radius: 18px;
-    background: var(
-      --manifest-active-poster-background,
-      #f6e1ff
-    );
+    background: var(--manifest-active-poster-background, #f6e1ff);
     transition: background-color 200ms ease;
     overflow: hidden;
   }
@@ -5036,7 +5036,9 @@ code {
     font-weight: 400;
     line-height: 1;
     box-shadow: 0 1px 2px rgba(17, 17, 17, 0.14);
-    transition: transform 150ms ease, background-color 150ms ease;
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease;
   }
 
   .manifesto-waitlist-button:hover,
@@ -5066,12 +5068,18 @@ code {
     color: var(--manifest-copy);
     font-size: 13px;
     white-space: nowrap;
-    transition: background-color 150ms ease, transform 150ms ease;
+    transition:
+      background-color 150ms ease,
+      transform 150ms ease;
   }
 
   .manifesto-theme-toggle:hover,
   .manifesto-theme-toggle:focus-visible {
-    background: color-mix(in srgb, var(--manifest-paper) 92%, var(--manifest-copy) 8%);
+    background: color-mix(
+      in srgb,
+      var(--manifest-paper) 92%,
+      var(--manifest-copy) 8%
+    );
     transform: translateY(-1px);
   }
 
