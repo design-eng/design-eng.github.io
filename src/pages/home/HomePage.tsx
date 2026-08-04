@@ -358,10 +358,14 @@ export function HomePage() {
           </div>
         </header>
 
-        <HomePosterStack
-          activeId={activeHomePoster}
-          onActiveChange={setActiveHomePoster}
-        />
+        <div className="home-sticky-pane">
+          <div className="home-sticky-pane__inner">
+            <HomePosterStack
+              activeId={activeHomePoster}
+              onActiveChange={setActiveHomePoster}
+            />
+          </div>
+        </div>
 
         <div className="home-layout">
           <section className="home-hero-copy" aria-labelledby="home-title">

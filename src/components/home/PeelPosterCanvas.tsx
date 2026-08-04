@@ -201,6 +201,7 @@ export function PeelPosterCanvas({
   const cueDelayRef = useRef<gsap.core.Tween | null>(null);
   const hoveringEdgeRef = useRef(false);
   const suppressHoverUntilLeaveRef = useRef(false);
+  const isDraggingRef = useRef(false);
   const isCompletingGestureRef = useRef(false);
   const gestureStartRef = useRef<{ x: number; time: number } | null>(null);
   const progressRef = useRef(0);
@@ -209,7 +210,6 @@ export function PeelPosterCanvas({
     value: 0
   });
   const [grabY, setGrabY] = useState(0.28);
-  const [isDragging, setIsDragging] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
@@ -314,6 +314,7 @@ export function PeelPosterCanvas({
     progressRef.current = 0;
     hoveringEdgeRef.current = false;
     suppressHoverUntilLeaveRef.current = true;
+    isDraggingRef.current = false;
     isCompletingGestureRef.current = false;
     gestureStartRef.current = null;
   }, [imageSrc]);
@@ -350,14 +351,18 @@ export function PeelPosterCanvas({
       time: performance.now()
     };
     updateProgress(Math.max(0.025, pointer.x * 0.92));
-    setIsDragging(true);
+    isDraggingRef.current = true;
     onPeelingChange(true);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (isCompletingGestureRef.current) {
+      return;
+    }
+
     const pointer = readPointer(event);
 
-    if (!isDragging) {
+    if (!isDraggingRef.current) {
       if (prefersReducedMotion) {
         return;
       }
@@ -388,7 +393,11 @@ export function PeelPosterCanvas({
   const handlePointerLeave = () => {
     suppressHoverUntilLeaveRef.current = false;
 
-    if (isDragging || !hoveringEdgeRef.current) {
+    if (
+      isCompletingGestureRef.current ||
+      isDraggingRef.current ||
+      !hoveringEdgeRef.current
+    ) {
       return;
     }
 
@@ -397,7 +406,7 @@ export function PeelPosterCanvas({
   };
 
   const finishGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDragging) {
+    if (!isDraggingRef.current) {
       return;
     }
 
@@ -409,7 +418,7 @@ export function PeelPosterCanvas({
       '.home-poster-stage, .home-mobile-poster-showcase'
     );
     window.setTimeout(() => keyboardRegion?.blur(), 0);
-    setIsDragging(false);
+    isDraggingRef.current = false;
 
     const gestureStart = gestureStartRef.current;
     const elapsedSeconds = gestureStart

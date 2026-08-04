@@ -39,36 +39,40 @@ type HomePosterStackProps = {
 
 const manifestoPosterSlots: Record<HomePosterId, HomePoster['slot']> = {
   purple: {
-    x: 97,
-    y: 218,
-    width: 370,
-    height: 524,
+    x: 139,
+    y: 182,
+    width: 420,
+    height: 595,
     rotate: 0,
-    baseZIndex: 20
+    baseZIndex: 1,
+    inactiveOffset: {
+      x: 13,
+      y: 57
+    }
   },
   orange: {
-    x: 5,
-    y: 252,
-    width: 388,
-    height: 524,
+    x: 42,
+    y: 224,
+    width: 420,
+    height: 595,
     rotate: -4,
-    baseZIndex: 19
+    baseZIndex: 2
   },
   blue: {
-    x: 136,
+    x: 244,
     y: 190,
-    width: 390,
-    height: 552,
+    width: 420,
+    height: 595,
     rotate: 4,
-    baseZIndex: 18
+    baseZIndex: 4
   },
   green: {
-    x: 135,
-    y: 133,
-    width: 388,
-    height: 552,
+    x: 185,
+    y: 124,
+    width: 420,
+    height: 596,
     rotate: 0,
-    baseZIndex: 17
+    baseZIndex: 3
   }
 };
 
