@@ -29,12 +29,14 @@ type PeelMeshProps = {
   height: number;
   progress: number;
   grabY: number;
+  pullY: number;
 };
 
 const vertexShader = `
   uniform float uProgress;
   uniform float uWidth;
   uniform float uGrabY;
+  uniform float uPullY;
 
   varying vec2 vUv;
   varying float vCurl;
@@ -89,13 +91,18 @@ const vertexShader = `
           smoothstep(0.8, 1.0, uv.y) * 0.035 +
           grabDirection * centerBow * 0.035
         );
+      transformed.y += freeEdge * uPullY * uWidth *
+        mix(0.28, 0.72, handInfluence) *
+        smoothstep(0.02, 0.48, progress);
       transformed.z += freeEdge * handInfluence * radius * 0.22;
       transformed.z += handInfluence * radius * 0.075 *
         sin(uv.y * 8.0 + progress * 3.0);
     }
 
     float exitProgress = smoothstep(0.68, 1.05, progress);
-    transformed.x += uWidth * exitProgress * 0.62;
+    float downwardExit = clamp(-uPullY * 1.65, 0.0, 1.0);
+    transformed.x += uWidth * exitProgress * mix(0.62, 0.3, downwardExit);
+    transformed.y -= uWidth * exitProgress * downwardExit * 0.78;
     transformed.z += uWidth * exitProgress * 0.055;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
@@ -136,7 +143,8 @@ function PeelMesh({
   width,
   height,
   progress,
-  grabY
+  grabY,
+  pullY
 }: PeelMeshProps) {
   const materialRef = useRef<THREE.ShaderMaterial | null>(null);
   const loadedTexture = useLoader(THREE.TextureLoader, imageSrc);
@@ -162,6 +170,7 @@ function PeelMesh({
 
     materialRef.current.uniforms.uProgress.value = progress;
     materialRef.current.uniforms.uGrabY.value = grabY;
+    materialRef.current.uniforms.uPullY.value = pullY;
   });
 
   return (
@@ -177,7 +186,8 @@ function PeelMesh({
           uTexture: { value: texture },
           uProgress: { value: progress },
           uWidth: { value: width },
-          uGrabY: { value: grabY }
+          uGrabY: { value: grabY },
+          uPullY: { value: pullY }
         }}
       />
     </mesh>
@@ -203,13 +213,18 @@ export function PeelPosterCanvas({
   const suppressHoverUntilLeaveRef = useRef(false);
   const isDraggingRef = useRef(false);
   const isCompletingGestureRef = useRef(false);
-  const gestureStartRef = useRef<{ x: number; time: number } | null>(null);
+  const gestureStartRef = useRef<{
+    x: number;
+    y: number;
+    time: number;
+  } | null>(null);
   const progressRef = useRef(0);
   const [progressState, setProgressState] = useState({
     imageSrc,
     value: 0
   });
   const [grabY, setGrabY] = useState(0.28);
+  const [pullY, setPullY] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
@@ -348,8 +363,10 @@ export function PeelPosterCanvas({
     setGrabY(pointer.y);
     gestureStartRef.current = {
       x: pointer.x,
+      y: pointer.y,
       time: performance.now()
     };
+    setPullY(0);
     updateProgress(Math.max(0.025, pointer.x * 0.92));
     isDraggingRef.current = true;
     onPeelingChange(true);
@@ -386,7 +403,18 @@ export function PeelPosterCanvas({
       return;
     }
 
-    updateProgress(pointer.x);
+    const gestureStart = gestureStartRef.current;
+    const downwardPull = gestureStart
+      ? Math.max(0, gestureStart.y - pointer.y) * (height / width)
+      : 0;
+    const peelDistance = Math.hypot(pointer.x, downwardPull);
+
+    updateProgress(THREE.MathUtils.clamp(peelDistance, 0, 1.16));
+    setPullY(
+      gestureStart
+        ? THREE.MathUtils.clamp(pointer.y - gestureStart.y, -0.75, 0.75)
+        : 0
+    );
     setGrabY((currentGrabY) => currentGrabY + (pointer.y - currentGrabY) * 0.08);
   };
 
@@ -445,6 +473,7 @@ export function PeelPosterCanvas({
     }
 
     animateProgress(0, () => {
+      setPullY(0);
       onPeelingChange(false);
     });
   };
@@ -478,6 +507,7 @@ export function PeelPosterCanvas({
           height={height}
           progress={progress}
           grabY={grabY}
+          pullY={pullY}
         />
       </Canvas>
     </div>

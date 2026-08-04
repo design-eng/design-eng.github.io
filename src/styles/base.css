@@ -213,10 +213,10 @@ code {
     box-shadow 150ms ease;
 }
 
-.home-button:hover,
+/* .home-button:hover,
 .home-button:focus-visible {
   transform: translateY(-1px);
-}
+} */
 
 .home-button--primary {
   width: 131px;
@@ -293,7 +293,7 @@ code {
   position: relative;
   display: inline-block;
   height: 46px;
-  vertical-align: -7px;
+  vertical-align: -8px;
   white-space: nowrap;
 }
 
@@ -377,9 +377,17 @@ code {
 
 .home-manifest-preview__label a {
   display: inline-block;
-  margin-top: 2px;
+  margin-top: 0;
   color: var(--home-blue);
   text-decoration: none;
+}
+
+@media (min-width: 901px) {
+  .home-manifest-preview__label {
+    display: grid;
+    grid-template-rows: 24px 24px;
+    align-content: start;
+  }
 }
 
 .home-manifest-preview__label-heading {
@@ -557,9 +565,7 @@ code {
   inset: 0;
 }
 
-.home-poster--active:has(
-    .home-poster-peel-surface.is-rendering-peel
-  )
+.home-poster--active:has(.home-poster-peel-surface.is-rendering-peel)
   .home-poster-active-image {
   opacity: 0;
 }
@@ -1331,9 +1337,7 @@ code {
     overflow: visible;
   }
 
-  .home-mobile-poster--active:has(
-      .home-poster-peel-surface.is-rendering-peel
-    )
+  .home-mobile-poster--active:has(.home-poster-peel-surface.is-rendering-peel)
     .home-mobile-poster__active-image {
     opacity: 0;
   }
@@ -1590,9 +1594,7 @@ code {
     overflow: visible;
   }
 
-  .home-mobile-poster--active:has(
-      .home-poster-peel-surface.is-rendering-peel
-    )
+  .home-mobile-poster--active:has(.home-poster-peel-surface.is-rendering-peel)
     .home-mobile-poster__active-image {
     opacity: 0;
   }
@@ -1832,12 +1834,18 @@ code {
   }
 
   :root[data-theme='dark'] .home-mobile-menu__button,
-  :root[data-theme='dark'] .home-footer .home-button,
-  :root[data-theme='dark'] .home-hero-copy__actions .home-button--primary {
+  :root[data-theme='dark'] .home-footer .home-button {
     border-color: #3e3f41;
     background: #222326;
     color: #ffffff;
     box-shadow: none;
+  }
+
+  :root[data-theme='dark'] .home-hero-copy__actions .home-button--primary {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #222326;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
   }
 
   :root[data-theme='dark'] .home-hero-copy__actions .home-button--secondary {
@@ -2683,7 +2691,7 @@ code {
 .waitlist-modal__caret {
   position: absolute;
   top: -10px;
-  left: 50%;
+  left: var(--waitlist-caret-left, 50%);
   z-index: 1;
   width: 20px;
   height: 20px;
@@ -2923,6 +2931,19 @@ code {
 
 :root[data-theme='dark'] .waitlist-modal__checkbox-row {
   color: #f2f2f3;
+}
+
+:root[data-theme='dark'] .waitlist-modal__submit,
+:root[data-theme='dark'] .waitlist-modal__done {
+  background: #ffffff;
+  color: #222326;
+}
+
+:root[data-theme='dark'] .waitlist-modal__submit:hover,
+:root[data-theme='dark'] .waitlist-modal__submit:focus-visible,
+:root[data-theme='dark'] .waitlist-modal__done:hover,
+:root[data-theme='dark'] .waitlist-modal__done:focus-visible {
+  background: #f2f2f2;
 }
 
 @keyframes waitlist-popover-in {

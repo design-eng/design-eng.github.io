@@ -47,9 +47,22 @@ export function WaitlistModal({
       }
 
       const bounds = trigger.getBoundingClientRect();
+      const popoverWidth = Math.min(420, window.innerWidth - 28);
+      const triggerCenter = bounds.left + bounds.width / 2;
+      const popoverLeft = Math.min(
+        window.innerWidth - 14 - popoverWidth,
+        Math.max(14, bounds.left)
+      );
+      const popoverCenter = popoverLeft + popoverWidth / 2;
+      const caretLeft = Math.min(
+        popoverWidth - 18,
+        Math.max(18, triggerCenter - (popoverCenter - popoverWidth / 2))
+      );
+
       setPopoverPosition({
-        '--waitlist-popover-left': `${bounds.left + bounds.width / 2 + 6.5}px`,
-        '--waitlist-popover-top': `${bounds.bottom + 19}px`
+        '--waitlist-popover-left': `${popoverCenter}px`,
+        '--waitlist-popover-top': `${bounds.bottom + 19}px`,
+        '--waitlist-caret-left': `${caretLeft}px`
       } as CSSProperties);
     };
 

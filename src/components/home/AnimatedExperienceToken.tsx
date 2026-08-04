@@ -178,14 +178,14 @@ export function AnimatedExperienceToken({
         .to(
           word,
           {
-            autoAlpha: 1,
             clipPath: 'inset(0 0% 0 0)',
-            duration: 0.72,
+            duration: 0.62,
             ease: 'power2.inOut'
           },
-          5.16
+          5.07
         )
-        .set(tileElements, { visibility: 'hidden' }, 5.12);
+        .set(word, { autoAlpha: 1 }, 5.07)
+        .set(tileElements, { visibility: 'hidden' }, 5.07);
     }, token);
 
     return () => context.revert();
