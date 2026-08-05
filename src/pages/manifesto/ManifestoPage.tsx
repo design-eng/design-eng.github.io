@@ -727,6 +727,7 @@ export function ManifestoPage() {
                               width={173}
                               height={245}
                               interactionMode="touch"
+                              autoPeel
                               onComplete={() => {
                                 const nextPosterIndex =
                                   (mobileForegroundPosterIndex + 1) %

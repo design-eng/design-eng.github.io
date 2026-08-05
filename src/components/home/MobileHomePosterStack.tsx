@@ -141,6 +141,7 @@ export function MobileHomePosterStack({
                   height={posterSize.height}
                   interactionMode="touch"
                   playInitialCue={shouldPlayCue}
+                  autoPeel
                   onInitialCueComplete={handleCueComplete}
                   onComplete={next}
                   onPeelingChange={setIsPeeling}

@@ -232,6 +232,7 @@ export function HomePosterStack({
                   imageSrc={poster.imageSrc}
                   width={activePosterSlot.width}
                   height={activePosterSlot.height}
+                  autoPeel
                   onComplete={next}
                   onPeelingChange={setIsPeeling}
                 />

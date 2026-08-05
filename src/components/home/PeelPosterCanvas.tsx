@@ -18,6 +18,9 @@ type PeelPosterCanvasProps = {
   playInitialCue?: boolean;
   completionThreshold?: number;
   completionVelocity?: number;
+  autoPeel?: boolean;
+  autoPeelDelay?: number;
+  autoPeelDuration?: number;
   onInitialCueComplete?: () => void;
   onComplete: () => void;
   onPeelingChange: (isPeeling: boolean) => void;
@@ -202,6 +205,9 @@ export function PeelPosterCanvas({
   playInitialCue = false,
   completionThreshold = 0.42,
   completionVelocity = Number.POSITIVE_INFINITY,
+  autoPeel = false,
+  autoPeelDelay = 4200,
+  autoPeelDuration = 1.1,
   onInitialCueComplete,
   onComplete,
   onPeelingChange
@@ -213,6 +219,9 @@ export function PeelPosterCanvas({
   const suppressHoverUntilLeaveRef = useRef(false);
   const isDraggingRef = useRef(false);
   const isCompletingGestureRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  const onInitialCueCompleteRef = useRef(onInitialCueComplete);
+  const onPeelingChangeRef = useRef(onPeelingChange);
   const gestureStartRef = useRef<{
     x: number;
     y: number;
@@ -225,15 +234,24 @@ export function PeelPosterCanvas({
   });
   const [grabY, setGrabY] = useState(0.28);
   const [pullY, setPullY] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
   const progress =
     progressState.imageSrc === imageSrc ? progressState.value : 0;
-  const updateProgress = useCallback((value: number) => {
-    progressRef.current = value;
-    setProgressState({ imageSrc, value });
-  }, [imageSrc]);
+  const updateProgress = useCallback(
+    (value: number) => {
+      progressRef.current = value;
+      setProgressState({ imageSrc, value });
+    },
+    [imageSrc]
+  );
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onInitialCueCompleteRef.current = onInitialCueComplete;
+    onPeelingChangeRef.current = onPeelingChange;
+  }, [onComplete, onInitialCueComplete, onPeelingChange]);
 
   const readPointer = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -260,7 +278,7 @@ export function PeelPosterCanvas({
   );
 
   const animateProgress = useCallback(
-    (target: number, onAnimationComplete?: () => void) => {
+    (target: number, onAnimationComplete?: () => void, duration?: number) => {
       tweenRef.current?.kill();
 
       if (prefersReducedMotion) {
@@ -273,7 +291,7 @@ export function PeelPosterCanvas({
 
       tweenRef.current = gsap.to(state, {
         value: target,
-        duration: target > progressRef.current ? 0.62 : 0.72,
+        duration: duration ?? (target > progressRef.current ? 0.62 : 0.72),
         ease: target > progressRef.current ? 'power3.inOut' : 'power3.out',
         onUpdate: () => updateProgress(state.value),
         onComplete: onAnimationComplete
@@ -333,6 +351,47 @@ export function PeelPosterCanvas({
     isCompletingGestureRef.current = false;
     gestureStartRef.current = null;
   }, [imageSrc]);
+
+  useEffect(() => {
+    if (!autoPeel) return;
+
+    let timeoutId: number;
+    let cancelled = false;
+
+    const schedulePeel = (delay: number) => {
+      timeoutId = window.setTimeout(() => {
+        if (cancelled) return;
+
+        if (isDraggingRef.current || isCompletingGestureRef.current) {
+          schedulePeel(1200);
+          return;
+        }
+
+        cueDelayRef.current?.kill();
+        onInitialCueCompleteRef.current?.();
+        hoveringEdgeRef.current = false;
+        suppressHoverUntilLeaveRef.current = true;
+        isCompletingGestureRef.current = true;
+        onPeelingChangeRef.current(true);
+        animateProgress(
+          1.16,
+          () => {
+            if (cancelled) return;
+            onCompleteRef.current();
+            onPeelingChangeRef.current(false);
+          },
+          autoPeelDuration
+        );
+      }, delay);
+    };
+
+    schedulePeel(autoPeelDelay);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [animateProgress, autoPeel, autoPeelDelay, autoPeelDuration, imageSrc]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (isCompletingGestureRef.current) {
@@ -415,7 +474,9 @@ export function PeelPosterCanvas({
         ? THREE.MathUtils.clamp(pointer.y - gestureStart.y, -0.75, 0.75)
         : 0
     );
-    setGrabY((currentGrabY) => currentGrabY + (pointer.y - currentGrabY) * 0.08);
+    setGrabY(
+      (currentGrabY) => currentGrabY + (pointer.y - currentGrabY) * 0.08
+    );
   };
 
   const handlePointerLeave = () => {
@@ -460,10 +521,7 @@ export function PeelPosterCanvas({
 
     gestureStartRef.current = null;
 
-    if (
-      progressRef.current >= completionThreshold ||
-      hasIntentionalVelocity
-    ) {
+    if (progressRef.current >= completionThreshold || hasIntentionalVelocity) {
       isCompletingGestureRef.current = true;
       animateProgress(1.16, () => {
         onComplete();
