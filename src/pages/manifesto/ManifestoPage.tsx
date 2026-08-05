@@ -20,10 +20,10 @@ import { createAudioController } from '../../lib/audio/audioController';
 import birdAudio from '../../assets/bird-audio.wav';
 import handleImage from '../../assets/handle.png';
 import handleImageDark from '../../assets/handle-dark.png';
-import posterDreamers from '../../assets/home-poster-help-dreamers-web.png';
-import posterDemo from '../../assets/home-poster-demo-green-web.png';
-import posterProcess from '../../assets/home-poster-take-back-process-web.png';
-import posterSign from '../../assets/home-poster-sign-work-web.png';
+import posterDreamers from '../../assets/home-poster-help-dreamers-mobile.avif';
+import posterDemo from '../../assets/home-poster-demo-green-mobile.avif';
+import posterProcess from '../../assets/home-poster-take-back-process-mobile.avif';
+import posterSign from '../../assets/home-poster-sign-work-mobile.avif';
 import tactileLogo from '../../assets/tactile-logo.png';
 
 const manifestoParagraphs = [

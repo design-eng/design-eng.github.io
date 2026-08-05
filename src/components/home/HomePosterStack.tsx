@@ -3,13 +3,13 @@ import {
   useEffect,
   useState
 } from 'react';
-import posterPurple from '../../assets/home-poster-sign-work-web.png';
-import posterOrange from '../../assets/home-poster-help-dreamers-web.png';
-import posterBlue from '../../assets/home-poster-take-back-process-web.png';
-import posterGreen from '../../assets/home-poster-demo-green-web.png';
+import posterPurple from '../../assets/home-poster-sign-work-web.avif';
+import posterOrange from '../../assets/home-poster-help-dreamers-web.avif';
+import posterBlue from '../../assets/home-poster-take-back-process-web.avif';
+import posterGreen from '../../assets/home-poster-demo-green-web.avif';
 import { usePosterController } from '../posters/usePosterController';
 import { PeelPosterCanvas } from './PeelPosterCanvas';
-import './preloadPeelPosterTextures';
+import { useProgressivePosterImages } from './useProgressivePosterImages';
 
 export type HomePosterId = 'purple' | 'orange' | 'blue' | 'green';
 
@@ -150,6 +150,11 @@ export function HomePosterStack({
     onActiveChange
   });
   const activePosterSlot = getPosterSlot(activeItem, placement);
+  const readyPosterIds = useProgressivePosterImages(
+    homePosters,
+    activeId,
+    isDesktopPosterStage
+  );
 
   useEffect(() => {
     const desktopQuery = window.matchMedia('(min-width: 901px)');
@@ -163,6 +168,8 @@ export function HomePosterStack({
       desktopQuery.removeEventListener('change', handleDesktopChange);
     };
   }, []);
+
+  if (!isDesktopPosterStage) return null;
 
   return (
     <section
@@ -207,13 +214,17 @@ export function HomePosterStack({
                 : undefined
             }
           >
-            <img
-              className={isActive ? 'home-poster-active-image' : undefined}
-              src={poster.imageSrc}
-              alt=""
-              draggable={false}
-              aria-hidden="true"
-            />
+            {isActive || readyPosterIds.has(poster.id) ? (
+              <img
+                className={isActive ? 'home-poster-active-image' : undefined}
+                src={poster.imageSrc}
+                alt=""
+                decoding="async"
+                fetchPriority={isActive ? 'high' : 'low'}
+                draggable={false}
+                aria-hidden="true"
+              />
+            ) : null}
 
             {isActive && isDesktopPosterStage ? (
               <div className="home-poster-peel" aria-hidden="true">

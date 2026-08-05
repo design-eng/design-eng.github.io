@@ -5,12 +5,13 @@ import {
   useRef,
   useState
 } from 'react';
-import posterPurple from '../../assets/home-poster-sign-work-web.png';
-import posterOrange from '../../assets/home-poster-help-dreamers-web.png';
-import posterBlue from '../../assets/home-poster-take-back-process-web.png';
-import posterGreen from '../../assets/home-poster-demo-green-web.png';
+import posterPurple from '../../assets/home-poster-sign-work-mobile.avif';
+import posterOrange from '../../assets/home-poster-help-dreamers-mobile.avif';
+import posterBlue from '../../assets/home-poster-take-back-process-mobile.avif';
+import posterGreen from '../../assets/home-poster-demo-green-mobile.avif';
 import { usePosterController } from '../posters/usePosterController';
 import { PeelPosterCanvas } from './PeelPosterCanvas';
+import { useProgressivePosterImages } from './useProgressivePosterImages';
 import type { HomePosterId } from './HomePosterStack';
 
 type MobileHomePosterStackProps = {
@@ -66,6 +67,11 @@ export function MobileHomePosterStack({
     activeId,
     onActiveChange: handleActiveChange
   });
+  const readyPosterIds = useProgressivePosterImages(
+    mobilePosters,
+    activeId,
+    isResponsivePosterLayout
+  );
 
   useEffect(() => {
     const responsiveQuery = window.matchMedia('(max-width: 900px)');
@@ -123,13 +129,19 @@ export function MobileHomePosterStack({
                 : undefined
             }
           >
-            <img
-              className={isActive ? 'home-mobile-poster__active-image' : undefined}
-              src={poster.imageSrc}
-              alt=""
-              draggable={false}
-              aria-hidden="true"
-            />
+            {isActive || readyPosterIds.has(poster.id) ? (
+              <img
+                className={
+                  isActive ? 'home-mobile-poster__active-image' : undefined
+                }
+                src={poster.imageSrc}
+                alt=""
+                decoding="async"
+                fetchPriority={isActive ? 'high' : 'low'}
+                draggable={false}
+                aria-hidden="true"
+              />
+            ) : null}
             {isActive ? (
               <div className="home-mobile-poster__peel" aria-hidden="true">
                 <PeelPosterCanvas
