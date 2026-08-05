@@ -11,7 +11,6 @@ import posterBlue from '../../assets/home-poster-take-back-process-mobile.avif';
 import posterGreen from '../../assets/home-poster-demo-green-mobile.avif';
 import { usePosterController } from '../posters/usePosterController';
 import { PeelPosterCanvas } from './PeelPosterCanvas';
-import { useProgressivePosterImages } from './useProgressivePosterImages';
 import type { HomePosterId } from './HomePosterStack';
 
 type MobileHomePosterStackProps = {
@@ -67,12 +66,6 @@ export function MobileHomePosterStack({
     activeId,
     onActiveChange: handleActiveChange
   });
-  const readyPosterIds = useProgressivePosterImages(
-    mobilePosters,
-    activeId,
-    isResponsivePosterLayout
-  );
-
   useEffect(() => {
     const responsiveQuery = window.matchMedia('(max-width: 900px)');
     const handleResponsiveChange = () =>
@@ -129,19 +122,17 @@ export function MobileHomePosterStack({
                 : undefined
             }
           >
-            {isActive || readyPosterIds.has(poster.id) ? (
-              <img
-                className={
-                  isActive ? 'home-mobile-poster__active-image' : undefined
-                }
-                src={poster.imageSrc}
-                alt=""
-                decoding="async"
-                fetchPriority={isActive ? 'high' : 'low'}
-                draggable={false}
-                aria-hidden="true"
-              />
-            ) : null}
+            <img
+              className={
+                isActive ? 'home-mobile-poster__active-image' : undefined
+              }
+              src={poster.imageSrc}
+              alt=""
+              decoding="async"
+              fetchPriority={isActive ? 'high' : 'auto'}
+              draggable={false}
+              aria-hidden="true"
+            />
             {isActive ? (
               <div className="home-mobile-poster__peel" aria-hidden="true">
                 <PeelPosterCanvas
