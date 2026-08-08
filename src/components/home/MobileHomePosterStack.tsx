@@ -12,6 +12,7 @@ import posterGreen from '../../assets/home-poster-demo-green-mobile.avif';
 import { usePosterController } from '../posters/usePosterController';
 import { PeelPosterCanvas } from './PeelPosterCanvas';
 import type { HomePosterId } from './HomePosterStack';
+import { useInstantPosterSequence } from './useInstantPosterSequence';
 
 type MobileHomePosterStackProps = {
   activeId: HomePosterId;
@@ -32,13 +33,19 @@ const initialSlots: Record<HomePosterId, number> = {
   green: 3
 };
 
+const instantPosterSequence: readonly HomePosterId[] = [
+  'purple',
+  'blue',
+  'orange',
+  'green'
+];
+
 export function MobileHomePosterStack({
   activeId,
   onActiveChange
 }: MobileHomePosterStackProps) {
   const activePosterRef = useRef<HTMLElement | null>(null);
   const [isPeeling, setIsPeeling] = useState(false);
-  const [shouldPlayCue, setShouldPlayCue] = useState(true);
   const [posterSize, setPosterSize] = useState({ width: 270, height: 382.5 });
   const [slots, setSlots] =
     useState<Record<HomePosterId, number>>(initialSlots);
@@ -59,13 +66,29 @@ export function MobileHomePosterStack({
     },
     [activeId, onActiveChange]
   );
-  const handleCueComplete = useCallback(() => setShouldPlayCue(false), []);
+  const handleInstantActiveChange = useCallback(
+    (nextId: HomePosterId) => {
+      if (nextId === 'purple') {
+        setSlots(initialSlots);
+      }
+
+      onActiveChange(nextId);
+    },
+    [onActiveChange]
+  );
 
   const { activeItem, next, handleKeyDown } = usePosterController({
     items: mobilePosters,
     activeId,
     onActiveChange: handleActiveChange
   });
+  const { reveal, revealedIds } = useInstantPosterSequence(
+    mobilePosters,
+    instantPosterSequence,
+    activeId,
+    handleInstantActiveChange,
+    isResponsivePosterLayout && !isPeeling
+  );
   useEffect(() => {
     const responsiveQuery = window.matchMedia('(max-width: 900px)');
     const handleResponsiveChange = () =>
@@ -105,6 +128,8 @@ export function MobileHomePosterStack({
       </span>
 
       {mobilePosters.map((poster) => {
+        if (!revealedIds.has(poster.id)) return null;
+
         const slot = slots[poster.id];
         const isActive = poster.id === activeId;
 
@@ -115,6 +140,10 @@ export function MobileHomePosterStack({
             className={`home-mobile-poster home-mobile-poster--slot-${slot}${
               isActive ? ' home-mobile-poster--active' : ''
             }`}
+            style={{
+              zIndex: instantPosterSequence.indexOf(poster.id) + 1,
+              transition: 'none'
+            }}
             aria-hidden={isActive ? undefined : true}
             aria-label={
               isActive
@@ -140,10 +169,15 @@ export function MobileHomePosterStack({
                   width={posterSize.width}
                   height={posterSize.height}
                   interactionMode="touch"
-                  playInitialCue={shouldPlayCue}
-                  autoPeel
-                  onInitialCueComplete={handleCueComplete}
-                  onComplete={next}
+                  onComplete={() => {
+                    const activeIndex = mobilePosters.findIndex(
+                      (item) => item.id === activeId
+                    );
+                    const nextPoster =
+                      mobilePosters[(activeIndex + 1) % mobilePosters.length];
+                    reveal(nextPoster.id);
+                    next();
+                  }}
                   onPeelingChange={setIsPeeling}
                 />
               </div>

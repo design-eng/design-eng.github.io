@@ -2,6 +2,7 @@ import {
   type CSSProperties,
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
+  useCallback,
   useEffect,
   useRef,
   useState
@@ -13,6 +14,7 @@ import {
   type HomePosterId
 } from '../../components/home/HomePosterStack';
 import { PeelPosterCanvas } from '../../components/home/PeelPosterCanvas';
+import { useInstantPosterSequence } from '../../components/home/useInstantPosterSequence';
 import { SignatureBlock } from '../../components/signature/SignatureBlock';
 import { WaitlistModal } from '../../components/cta/WaitlistModal';
 import { useLandingStore } from '../../state/useLandingStore';
@@ -174,6 +176,20 @@ const mobilePosters = [
   { id: 'sign', label: 'Sign your work', imageSrc: posterSign }
 ] as const;
 
+const instantMobilePosterSequence = [
+  'sign',
+  'process',
+  'dreamers',
+  'demo'
+] as const;
+
+const mobilePosterSlots = {
+  dreamers: 1,
+  demo: 2,
+  process: 3,
+  sign: 4
+} as const;
+
 const manifestoTitle = (
   <>
     The true experience design software:<br />
@@ -252,11 +268,14 @@ export function ManifestoPage() {
   const setAudioStatus = useLandingStore((state) => state.setAudioStatus);
   const setMuted = useLandingStore((state) => state.setMuted);
   const [theme, setTheme] = useState<ThemeMode>('light');
+  const [isMobileManifestoViewport, setIsMobileManifestoViewport] = useState(
+    () => window.matchMedia('(max-width: 900px)').matches
+  );
   const [activeDesktopPoster, setActiveDesktopPoster] =
     useState<HomePosterId>('purple');
   const [mobileCopyHeight, setMobileCopyHeight] = useState(getMobileCopyMaxHeight);
   const [isMobileDividerDragging, setIsMobileDividerDragging] = useState(false);
-  const [activeMobilePosterIndex, setActiveMobilePosterIndex] = useState(1);
+  const [activeMobilePosterIndex, setActiveMobilePosterIndex] = useState(3);
   const [mobileForegroundPosterIndex, setMobileForegroundPosterIndex] =
     useState(3);
   const [mobilePosterDragX, setMobilePosterDragX] = useState(0);
@@ -276,6 +295,22 @@ export function ManifestoPage() {
     startX: number;
     startTime: number;
   } | null>(null);
+  const handleInstantMobilePosterChange = useCallback(
+    (nextId: (typeof instantMobilePosterSequence)[number]) => {
+      const nextIndex = mobilePosters.findIndex((poster) => poster.id === nextId);
+      setActiveMobilePosterIndex(nextIndex);
+      setMobileForegroundPosterIndex(nextIndex);
+    },
+    []
+  );
+  const { reveal: revealMobilePoster, revealedIds: revealedMobilePosterIds } =
+    useInstantPosterSequence(
+      mobilePosters,
+      instantMobilePosterSequence,
+      mobilePosters[activeMobilePosterIndex].id,
+      handleInstantMobilePosterChange,
+      isMobileManifestoViewport && !isMobilePosterPeeling
+    );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -308,6 +343,16 @@ export function ManifestoPage() {
     return () => {
       mediaQuery.removeEventListener('change', handlePreferenceChange);
     };
+  }, []);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 900px)');
+    const handleMobileChange = () => {
+      setIsMobileManifestoViewport(mobileQuery.matches);
+    };
+
+    mobileQuery.addEventListener('change', handleMobileChange);
+    return () => mobileQuery.removeEventListener('change', handleMobileChange);
   }, []);
 
   useEffect(() => {
@@ -682,29 +727,34 @@ export function ManifestoPage() {
                 onPointerCancel={(event) => finishMobilePosterDrag(event, true)}
               >
                 <div className="mobile-stage__poster-composition">
-                  {mobilePosters.map((_, slotIndex) => {
-                    const itemIndex =
-                      (mobileForegroundPosterIndex + 1 + slotIndex) %
-                      mobilePosters.length;
-                    const item = mobilePosters[itemIndex];
+                  {mobilePosters.map((item, itemIndex) => {
+                    if (!revealedMobilePosterIds.has(item.id)) return null;
+
                     const isForeground =
-                      slotIndex === mobilePosters.length - 1;
+                      itemIndex === mobileForegroundPosterIndex;
+                    const slotIndex = mobilePosterSlots[item.id];
 
                     return (
                       <button
-                        key={`${slotIndex}-${item.id}`}
+                        key={item.id}
                         type="button"
                         className={`mobile-stage__poster-card mobile-stage__poster-card--${
-                          slotIndex + 1
+                          slotIndex
                         }${isForeground ? ' is-active' : ''}${
                           isForeground && isMobilePosterPeeling
                             ? ' is-peeling'
                             : ''
                         }`}
+                        style={{
+                          zIndex:
+                            instantMobilePosterSequence.indexOf(item.id) + 1,
+                          transition: 'none'
+                        }}
                         aria-label={`${item.label}${
                           isForeground ? ', selected' : ''
                         }`}
                         onClick={() => {
+                          revealMobilePoster(item.id);
                           setActiveMobilePosterIndex(itemIndex);
                           setMobileForegroundPosterIndex(itemIndex);
                         }}
@@ -727,11 +777,13 @@ export function ManifestoPage() {
                               width={173}
                               height={245}
                               interactionMode="touch"
-                              autoPeel
                               onComplete={() => {
                                 const nextPosterIndex =
                                   (mobileForegroundPosterIndex + 1) %
                                   mobilePosters.length;
+                                revealMobilePoster(
+                                  mobilePosters[nextPosterIndex].id
+                                );
                                 setMobileForegroundPosterIndex(nextPosterIndex);
                                 setActiveMobilePosterIndex(nextPosterIndex);
                               }}

@@ -9,7 +9,7 @@ import posterBlue from '../../assets/home-poster-take-back-process-web.avif';
 import posterGreen from '../../assets/home-poster-demo-green-web.avif';
 import { usePosterController } from '../posters/usePosterController';
 import { PeelPosterCanvas } from './PeelPosterCanvas';
-import { useProgressivePosterImages } from './useProgressivePosterImages';
+import { useInstantPosterSequence } from './useInstantPosterSequence';
 
 export type HomePosterId = 'purple' | 'orange' | 'blue' | 'green';
 
@@ -135,6 +135,13 @@ const homePosters: readonly HomePoster[] = [
   }
 ] as const;
 
+const instantPosterSequence: readonly HomePosterId[] = [
+  'purple',
+  'blue',
+  'orange',
+  'green'
+];
+
 export function HomePosterStack({
   activeId,
   onActiveChange,
@@ -150,10 +157,12 @@ export function HomePosterStack({
     onActiveChange
   });
   const activePosterSlot = getPosterSlot(activeItem, placement);
-  const readyPosterIds = useProgressivePosterImages(
+  const { reveal, revealedIds } = useInstantPosterSequence(
     homePosters,
+    instantPosterSequence,
     activeId,
-    isDesktopPosterStage
+    onActiveChange,
+    isDesktopPosterStage && !isPeeling
   );
 
   useEffect(() => {
@@ -184,13 +193,10 @@ export function HomePosterStack({
         Current poster: {activeItem.label}
       </span>
 
-      {homePosters.map((poster, posterIndex) => {
+      {homePosters.map((poster) => {
+        if (!revealedIds.has(poster.id)) return null;
+
         const isActive = poster.id === activeId;
-        const distanceFromActive =
-          isActive
-            ? 0
-            : (posterIndex - activeIndex + homePosters.length) %
-              homePosters.length;
 
         return (
           <article
@@ -201,8 +207,8 @@ export function HomePosterStack({
             style={createPosterStyle(
               poster,
               isActive,
-              20 - distanceFromActive,
-              !isActive && distanceFromActive === 1,
+              instantPosterSequence.indexOf(poster.id) + 1,
+              poster.id === instantPosterSequence[0],
               placement
             )}
             data-poster-id={poster.id}
@@ -214,17 +220,15 @@ export function HomePosterStack({
                 : undefined
             }
           >
-            {isActive || readyPosterIds.has(poster.id) ? (
-              <img
-                className={isActive ? 'home-poster-active-image' : undefined}
-                src={poster.imageSrc}
-                alt=""
-                decoding="async"
-                fetchPriority={isActive ? 'high' : 'low'}
-                draggable={false}
-                aria-hidden="true"
-              />
-            ) : null}
+            <img
+              className={isActive ? 'home-poster-active-image' : undefined}
+              src={poster.imageSrc}
+              alt=""
+              decoding="async"
+              fetchPriority={isActive ? 'high' : 'low'}
+              draggable={false}
+              aria-hidden="true"
+            />
 
             {isActive && isDesktopPosterStage ? (
               <div className="home-poster-peel" aria-hidden="true">
@@ -232,8 +236,11 @@ export function HomePosterStack({
                   imageSrc={poster.imageSrc}
                   width={activePosterSlot.width}
                   height={activePosterSlot.height}
-                  autoPeel
-                  onComplete={next}
+                  onComplete={() => {
+                    const nextPoster = homePosters[(activeIndex + 1) % homePosters.length];
+                    reveal(nextPoster.id);
+                    next();
+                  }}
                   onPeelingChange={setIsPeeling}
                 />
               </div>

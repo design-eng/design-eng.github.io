@@ -109,7 +109,7 @@ code {
   left: 53.4722%;
   background: var(--home-pane-color);
   content: '';
-  transition: background-color 200ms ease;
+  transition: none;
 }
 
 .home-page > * {
@@ -161,7 +161,7 @@ code {
   border-radius: 18px;
   background: var(--home-surface-color);
   overflow: hidden;
-  transition: background-color 200ms ease;
+  transition: none;
 }
 
 .home-brand__mark {
@@ -510,7 +510,7 @@ code {
   height: 100vh;
   overflow: clip;
   background: var(--home-pane-color);
-  transition: background-color 200ms ease;
+  transition: none;
 }
 
 .home-sticky-pane .home-poster-stage {
@@ -1270,7 +1270,7 @@ code {
     background: var(--home-pane-color);
     outline: none;
     overflow: hidden;
-    transition: background-color 320ms ease;
+    transition: none;
   }
 
   .home-mobile-poster {
@@ -1527,7 +1527,7 @@ code {
     background: var(--home-pane-color);
     overflow: hidden;
     outline: none;
-    transition: background-color 320ms ease;
+    transition: none;
   }
 
   .home-mobile-poster {
@@ -1842,9 +1842,9 @@ code {
   }
 
   :root[data-theme='dark'] .home-hero-copy__actions .home-button--primary {
-    border-color: #ffffff;
-    background: #ffffff;
-    color: #222326;
+    border-color: #303236;
+    background: #141516;
+    color: #ffffff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
   }
 
@@ -4991,8 +4991,9 @@ code {
   }
 
   :root[data-theme='dark'] .mobile-stage__waitlist {
-    background: #f5f2ec;
-    color: #141414;
+    border: 1px solid #303236;
+    background: #141516;
+    color: #ffffff;
   }
 
   :root[data-theme='dark'] .mobile-stage__pagination button {
@@ -5105,7 +5106,7 @@ code {
     height: 34px;
     border-radius: 18px;
     background: var(--manifest-active-poster-background, #f6e1ff);
-    transition: background-color 200ms ease;
+    transition: none;
     overflow: hidden;
   }
 
@@ -5263,7 +5264,7 @@ code {
       --manifest-active-poster-background,
       var(--manifest-art-page)
     );
-    transition: background-color 200ms ease;
+    transition: none;
     overflow: hidden;
   }
 
@@ -5279,7 +5280,7 @@ code {
       --manifest-active-poster-background,
       var(--manifest-art-page)
     );
-    transition: background-color 200ms ease;
+    transition: none;
     overflow: clip;
   }
 

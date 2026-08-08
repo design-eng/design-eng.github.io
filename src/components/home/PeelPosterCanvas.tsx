@@ -51,13 +51,13 @@ const vertexShader = `
     vec3 transformed = position;
     float progress = clamp(uProgress, 0.0, 1.2);
     float left = -uWidth * 0.5;
-    float diagonal = (uv.y - uGrabY) * uWidth * 0.26 * progress;
+    float diagonal = (uv.y - uGrabY) * uWidth * 0.52 * progress;
     float fold = left + progress * uWidth * 1.16 + diagonal;
-    float earlyRadius = mix(0.04, 0.11, smoothstep(0.0, 0.58, progress));
+    float earlyRadius = mix(0.032, 0.1, smoothstep(0.0, 0.52, progress));
     float radius = uWidth * mix(
       earlyRadius,
       0.34,
-      smoothstep(0.58, 1.12, progress)
+      smoothstep(0.52, 1.12, progress)
     );
     float distanceToFold = fold - position.x;
 
@@ -206,8 +206,8 @@ export function PeelPosterCanvas({
   completionThreshold = 0.42,
   completionVelocity = Number.POSITIVE_INFINITY,
   autoPeel = false,
-  autoPeelDelay = 4200,
-  autoPeelDuration = 1.1,
+  autoPeelDelay = 4800,
+  autoPeelDuration = 1.25,
   onInitialCueComplete,
   onComplete,
   onPeelingChange
@@ -219,6 +219,8 @@ export function PeelPosterCanvas({
   const suppressHoverUntilLeaveRef = useRef(false);
   const isDraggingRef = useRef(false);
   const isCompletingGestureRef = useRef(false);
+  const isAutoPeelingRef = useRef(false);
+  const lastInteractionRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   const onInitialCueCompleteRef = useRef(onInitialCueComplete);
   const onPeelingChangeRef = useRef(onPeelingChange);
@@ -234,6 +236,10 @@ export function PeelPosterCanvas({
   });
   const [grabY, setGrabY] = useState(0.28);
   const [pullY, setPullY] = useState(0);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(
+    () => document.visibilityState === 'visible'
+  );
+  const [isSurfaceVisible, setIsSurfaceVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
@@ -246,6 +252,16 @@ export function PeelPosterCanvas({
     },
     [imageSrc]
   );
+  const cancelAutoPeel = useCallback(() => {
+    if (!isAutoPeelingRef.current) return;
+
+    tweenRef.current?.kill();
+    isAutoPeelingRef.current = false;
+    isCompletingGestureRef.current = false;
+    updateProgress(0);
+    setPullY(0);
+    onPeelingChangeRef.current(false);
+  }, [updateProgress]);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -316,6 +332,35 @@ export function PeelPosterCanvas({
   }, []);
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = document.visibilityState === 'visible';
+      setIsDocumentVisible(isVisible);
+      if (!isVisible) cancelAutoPeel();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [cancelAutoPeel]);
+
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (!surface) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSurfaceVisible(entry.isIntersecting);
+        if (!entry.isIntersecting) cancelAutoPeel();
+      },
+      { threshold: 0.12 }
+    );
+
+    observer.observe(surface);
+    return () => observer.disconnect();
+  }, [cancelAutoPeel]);
+
+  useEffect(() => {
     if (!playInitialCue || prefersReducedMotion) return;
 
     cueDelayRef.current?.kill();
@@ -349,11 +394,12 @@ export function PeelPosterCanvas({
     suppressHoverUntilLeaveRef.current = true;
     isDraggingRef.current = false;
     isCompletingGestureRef.current = false;
+    isAutoPeelingRef.current = false;
     gestureStartRef.current = null;
   }, [imageSrc]);
 
   useEffect(() => {
-    if (!autoPeel) return;
+    if (!autoPeel || !isDocumentVisible || !isSurfaceVisible) return;
 
     let timeoutId: number;
     let cancelled = false;
@@ -367,21 +413,48 @@ export function PeelPosterCanvas({
           return;
         }
 
+        const timeSinceInteraction = performance.now() - lastInteractionRef.current;
+        if (timeSinceInteraction < 3000) {
+          schedulePeel(3000 - timeSinceInteraction);
+          return;
+        }
+
         cueDelayRef.current?.kill();
         onInitialCueCompleteRef.current?.();
         hoveringEdgeRef.current = false;
         suppressHoverUntilLeaveRef.current = true;
         isCompletingGestureRef.current = true;
+        isAutoPeelingRef.current = true;
+        setGrabY(0.82);
+        setPullY(0);
         onPeelingChangeRef.current(true);
-        animateProgress(
-          1.16,
-          () => {
+        tweenRef.current?.kill();
+
+        if (prefersReducedMotion) {
+          updateProgress(1.16);
+          isAutoPeelingRef.current = false;
+          onCompleteRef.current();
+          onPeelingChangeRef.current(false);
+          return;
+        }
+
+        const state = { progress: 0, pullY: 0 };
+        tweenRef.current = gsap.to(state, {
+          progress: 1.16,
+          pullY: -0.32,
+          duration: autoPeelDuration,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            updateProgress(state.progress);
+            setPullY(state.pullY);
+          },
+          onComplete: () => {
             if (cancelled) return;
+            isAutoPeelingRef.current = false;
             onCompleteRef.current();
             onPeelingChangeRef.current(false);
-          },
-          autoPeelDuration
-        );
+          }
+        });
       }, delay);
     };
 
@@ -391,7 +464,16 @@ export function PeelPosterCanvas({
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [animateProgress, autoPeel, autoPeelDelay, autoPeelDuration, imageSrc]);
+  }, [
+    autoPeel,
+    autoPeelDelay,
+    autoPeelDuration,
+    imageSrc,
+    isDocumentVisible,
+    isSurfaceVisible,
+    prefersReducedMotion,
+    updateProgress
+  ]);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (isCompletingGestureRef.current) {
@@ -405,6 +487,7 @@ export function PeelPosterCanvas({
     }
 
     cueDelayRef.current?.kill();
+    lastInteractionRef.current = performance.now();
     onInitialCueComplete?.();
     tweenRef.current?.kill();
     hoveringEdgeRef.current = false;
@@ -508,6 +591,7 @@ export function PeelPosterCanvas({
     );
     window.setTimeout(() => keyboardRegion?.blur(), 0);
     isDraggingRef.current = false;
+    lastInteractionRef.current = performance.now();
 
     const gestureStart = gestureStartRef.current;
     const elapsedSeconds = gestureStart

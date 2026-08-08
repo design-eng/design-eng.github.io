@@ -189,7 +189,14 @@ export function AnimatedExperienceToken({
     }, token);
 
     return () => context.revert();
-  }, [finalMarginLeft, finalMarginRight, finalWidth, tilePillHeight, tilePillTop, tileSize]);
+  }, [
+    finalMarginLeft,
+    finalMarginRight,
+    finalWidth,
+    tilePillHeight,
+    tilePillTop,
+    tileSize
+  ]);
 
   return (
     <span
