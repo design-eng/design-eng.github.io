@@ -291,34 +291,32 @@ code {
 
 .experience-token {
   position: relative;
-  display: inline-block;
-  height: 46px;
-  vertical-align: -8px;
+  display: inline-grid;
+  vertical-align: baseline;
   white-space: nowrap;
 }
 
-.experience-token__word,
 .experience-token__tiles {
   position: absolute;
-  inset: 0 auto auto 0;
+  left: 0;
   display: block;
   height: 46px;
   white-space: nowrap;
 }
 
 .experience-token__word {
-  line-height: 46px;
+  position: relative;
+  grid-area: 1 / 1;
+  line-height: inherit;
   will-change: clip-path, opacity;
 }
 
 .experience-token__tiles {
+  top: 50%;
   width: 100%;
   overflow: hidden;
   pointer-events: none;
-}
-
-.experience-token--desktop .experience-token__tiles {
-  transform: translateY(2px);
+  transform: translateY(-50%);
 }
 
 .experience-token__tile {
@@ -582,6 +580,10 @@ code {
 .home-poster--active {
   isolation: isolate;
   cursor: grab;
+}
+
+.home-poster-stage[data-manual-peel-enabled='false'] .home-poster--active {
+  cursor: default;
 }
 
 .home-poster-stage.is-peeling .home-poster--active {
@@ -1604,24 +1606,19 @@ code {
     outline-offset: 5px;
   }
 
-  .experience-token--mobile,
-  .experience-token--mobile .experience-token__word,
-  .experience-token--mobile .experience-token__tiles {
-    height: 42px;
-  }
-
   .experience-token--mobile {
-    vertical-align: -5px;
+    vertical-align: baseline;
   }
 
   .experience-token--mobile .experience-token__word {
-    line-height: 42px;
-    transform: translateY(4px);
+    line-height: inherit;
   }
 
   .experience-token--mobile .experience-token__tiles {
+    top: 50%;
+    height: 36px;
     width: 100%;
-    transform: translateY(6px);
+    transform: translateY(-50%);
   }
 
   .experience-token--mobile .experience-token__tile,
@@ -1889,18 +1886,6 @@ code {
   :root[data-theme='dark'] .home-footer p {
     color: #ffffff;
     font-size: 14px;
-  }
-}
-
-@media (min-width: 370px) and (max-width: 410px) {
-  .experience-token--mobile .experience-token__word {
-    transform: translateY(5px);
-  }
-}
-
-@media (min-width: 400px) and (max-width: 450px) {
-  .experience-token--mobile .experience-token__word {
-    transform: translateY(3px);
   }
 }
 

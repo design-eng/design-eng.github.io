@@ -8,7 +8,10 @@ import posterOrange from '../../assets/home-poster-help-dreamers-web.avif';
 import posterBlue from '../../assets/home-poster-take-back-process-web.avif';
 import posterGreen from '../../assets/home-poster-demo-green-web.avif';
 import { usePosterController } from '../posters/usePosterController';
-import { PeelPosterCanvas } from './PeelPosterCanvas';
+import {
+  MANUAL_POSTER_PEEL_ENABLED,
+  PeelPosterCanvas
+} from './PeelPosterCanvas';
 import { useInstantPosterSequence } from './useInstantPosterSequence';
 
 export type HomePosterId = 'purple' | 'orange' | 'blue' | 'green';
@@ -186,6 +189,7 @@ export function HomePosterStack({
         isPeeling ? ' is-peeling' : ''
       }`}
       aria-label="Tactile poster collection"
+      data-manual-peel-enabled={MANUAL_POSTER_PEEL_ENABLED}
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
@@ -230,7 +234,9 @@ export function HomePosterStack({
               aria-hidden="true"
             />
 
-            {isActive && isDesktopPosterStage ? (
+            {isActive &&
+            isDesktopPosterStage &&
+            MANUAL_POSTER_PEEL_ENABLED ? (
               <div className="home-poster-peel" aria-hidden="true">
                 <PeelPosterCanvas
                   imageSrc={poster.imageSrc}

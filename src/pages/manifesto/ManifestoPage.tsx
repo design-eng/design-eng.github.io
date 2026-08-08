@@ -13,7 +13,10 @@ import {
   HomePosterStack,
   type HomePosterId
 } from '../../components/home/HomePosterStack';
-import { PeelPosterCanvas } from '../../components/home/PeelPosterCanvas';
+import {
+  MANUAL_POSTER_PEEL_ENABLED,
+  PeelPosterCanvas
+} from '../../components/home/PeelPosterCanvas';
 import { useInstantPosterSequence } from '../../components/home/useInstantPosterSequence';
 import { SignatureBlock } from '../../components/signature/SignatureBlock';
 import { WaitlistModal } from '../../components/cta/WaitlistModal';
@@ -767,7 +770,9 @@ export function ManifestoPage() {
                           draggable={false}
                         />
 
-                        {isForeground && isMobilePosterPeelEnabled ? (
+                        {isForeground &&
+                        isMobilePosterPeelEnabled &&
+                        MANUAL_POSTER_PEEL_ENABLED ? (
                           <div
                             className="home-poster-peel mobile-stage__poster-peel"
                             aria-hidden="true"

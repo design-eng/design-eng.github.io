@@ -10,6 +10,8 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { gsap } from 'gsap';
 import * as THREE from 'three';
 
+export const MANUAL_POSTER_PEEL_ENABLED = false;
+
 type PeelPosterCanvasProps = {
   imageSrc: string;
   width: number;

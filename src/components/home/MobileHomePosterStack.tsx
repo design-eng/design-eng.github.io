@@ -10,7 +10,10 @@ import posterOrange from '../../assets/home-poster-help-dreamers-mobile.avif';
 import posterBlue from '../../assets/home-poster-take-back-process-mobile.avif';
 import posterGreen from '../../assets/home-poster-demo-green-mobile.avif';
 import { usePosterController } from '../posters/usePosterController';
-import { PeelPosterCanvas } from './PeelPosterCanvas';
+import {
+  MANUAL_POSTER_PEEL_ENABLED,
+  PeelPosterCanvas
+} from './PeelPosterCanvas';
 import type { HomePosterId } from './HomePosterStack';
 import { useInstantPosterSequence } from './useInstantPosterSequence';
 
@@ -162,7 +165,7 @@ export function MobileHomePosterStack({
               draggable={false}
               aria-hidden="true"
             />
-            {isActive ? (
+            {isActive && MANUAL_POSTER_PEEL_ENABLED ? (
               <div className="home-mobile-poster__peel" aria-hidden="true">
                 <PeelPosterCanvas
                   imageSrc={poster.imageSrc}
