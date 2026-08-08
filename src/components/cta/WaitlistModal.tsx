@@ -15,9 +15,10 @@ type WaitlistModalProps = {
   theme: 'light' | 'dark';
 };
 
-type SubmitState = 'idle' | 'submitting' | 'success';
+type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const staticFormsEndpoint = 'https://api.staticforms.dev/submit';
 
 export function WaitlistModal({
   open,
@@ -27,6 +28,7 @@ export function WaitlistModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [welcomeBundle, setWelcomeBundle] = useState(true);
+  const [honeypot, setHoneypot] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [popoverPosition, setPopoverPosition] = useState<CSSProperties>();
@@ -76,14 +78,42 @@ export function WaitlistModal({
     };
   }, [open, returnFocusRef]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setHasSubmitted(true);
 
     if (!isNameValid || !isEmailValid || submitState === 'submitting') return;
 
+    const apiKey = import.meta.env.VITE_STATICFORMS_API_KEY;
+    if (!apiKey) {
+      setSubmitState('error');
+      return;
+    }
+
     setSubmitState('submitting');
-    window.setTimeout(() => setSubmitState('success'), 650);
+
+    try {
+      const response = await fetch(staticFormsEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey,
+          name: trimmedName,
+          email: trimmedEmail,
+          replyTo: trimmedEmail,
+          welcomeBundle,
+          honeypot,
+          subject: 'New Tactile waitlist signup'
+        })
+      });
+      const result = (await response.json()) as { success?: boolean };
+
+      if (!response.ok || !result.success) throw new Error('Submission failed');
+
+      setSubmitState('success');
+    } catch {
+      setSubmitState('error');
+    }
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -187,6 +217,18 @@ export function WaitlistModal({
                   <span>Send me the welcome bundle</span>
                 </label>
 
+                <label className="waitlist-modal__honeypot" aria-hidden="true">
+                  Leave this field empty
+                  <input
+                    type="text"
+                    name="honeypot"
+                    value={honeypot}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    onChange={(event) => setHoneypot(event.target.value)}
+                  />
+                </label>
+
                 <p
                   id="waitlist-form-error"
                   className="waitlist-modal__error"
@@ -194,7 +236,11 @@ export function WaitlistModal({
                 >
                   {hasSubmitted && (!isNameValid || !isEmailValid)
                     ? 'Enter your full name and a valid email address.'
-                    : ''}
+                    : submitState === 'error'
+                      ? import.meta.env.VITE_STATICFORMS_API_KEY
+                        ? 'Couldn’t join the waitlist. Please try again.'
+                        : 'Waitlist collection is not configured yet.'
+                      : ''}
                 </p>
 
                 <button

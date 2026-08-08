@@ -1,5 +1,15 @@
 # React + TypeScript + Vite
 
+## Waitlist collection
+
+Create a Static Forms form, then copy `.env.example` to `.env.local` and set
+`VITE_STATICFORMS_API_KEY`. Restrict submissions to the production domain and
+enable spam protection in the Static Forms dashboard.
+
+GitHub Pages deployments read the same value from the repository Actions
+secret named `VITE_STATICFORMS_API_KEY`. Add it under **Settings → Secrets and
+variables → Actions**, then redeploy the Pages workflow.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

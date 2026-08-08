@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import browserTile from '../../assets/browser-tile.png';
 import phoneTile from '../../assets/phone-tile.png';
@@ -11,12 +11,30 @@ type AnimatedExperienceTokenProps = {
 export function AnimatedExperienceToken({
   variant = 'desktop'
 }: AnimatedExperienceTokenProps) {
-  const tileSize = variant === 'mobile' ? 36 : 46;
-  const tileGap = variant === 'mobile' ? 8 : 10;
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window === 'undefined'
+      ? false
+      : window.matchMedia('(min-width: 621px) and (max-width: 900px)').matches
+  );
+
+  useEffect(() => {
+    if (variant !== 'desktop') return;
+
+    const query = window.matchMedia('(min-width: 621px) and (max-width: 900px)');
+    const updateTabletState = () => setIsTablet(query.matches);
+
+    updateTabletState();
+    query.addEventListener('change', updateTabletState);
+    return () => query.removeEventListener('change', updateTabletState);
+  }, [variant]);
+
+  const useMobileGeometry = variant === 'mobile' || isTablet;
+  const tileSize = useMobileGeometry ? 36 : 46;
+  const tileGap = useMobileGeometry ? 8 : 10;
   const finalWidth = tileSize * 3 + tileGap * 2;
-  const finalMarginLeft = variant === 'mobile' ? 7 : 15;
-  const finalMarginRight = variant === 'mobile' ? 8 : 18;
-  const tilePillHeight = variant === 'mobile' ? 12 : 15;
+  const finalMarginLeft = useMobileGeometry ? 7 : 15;
+  const finalMarginRight = useMobileGeometry ? 8 : 18;
+  const tilePillHeight = useMobileGeometry ? 12 : 15;
   const tilePillTop = (tileSize - tilePillHeight) / 2;
   const tokenRef = useRef<HTMLSpanElement>(null);
   const wordRef = useRef<HTMLSpanElement>(null);
@@ -201,7 +219,9 @@ export function AnimatedExperienceToken({
   return (
     <span
       ref={tokenRef}
-      className={`experience-token experience-token--${variant}`}
+      className={`experience-token experience-token--${
+        useMobileGeometry ? 'mobile' : 'desktop'
+      }`}
     >
       <span ref={wordRef} className="experience-token__word">
         experience

@@ -127,7 +127,7 @@ const homePosterThemes = {
 export function HomePage() {
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const [isMobileViewport, setIsMobileViewport] = useState(
-    () => window.matchMedia('(max-width: 620px)').matches
+    () => window.matchMedia('(max-width: 900px)').matches
   );
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
   const waitlistReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -165,7 +165,7 @@ export function HomePage() {
 
   useEffect(() => {
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const mobileQuery = window.matchMedia('(max-width: 620px)');
+    const mobileQuery = window.matchMedia('(max-width: 900px)');
     const applyStoredOrSystemTheme = () => setTheme(getInitialTheme());
     const handleStorage = (event: StorageEvent) => {
       if (event.key === THEME_STORAGE_KEY) applyStoredOrSystemTheme();

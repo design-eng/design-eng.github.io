@@ -291,7 +291,7 @@ code {
 
 .experience-token {
   position: relative;
-  display: inline-grid;
+  display: inline-block;
   vertical-align: baseline;
   white-space: nowrap;
 }
@@ -306,7 +306,7 @@ code {
 
 .experience-token__word {
   position: relative;
-  grid-area: 1 / 1;
+  display: inline;
   line-height: inherit;
   will-change: clip-path, opacity;
 }
@@ -1252,6 +1252,13 @@ code {
 }
 
 @media (min-width: 621px) and (max-width: 900px) {
+  .home-pexels {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    object-fit: contain;
+  }
+
   .home-layout {
     grid-template-rows: auto auto auto auto auto;
     grid-template-areas:
@@ -2832,6 +2839,15 @@ code {
   color: #b4232d;
   font-size: 11px;
   line-height: 16px;
+}
+
+.waitlist-modal__honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
 }
 
 .waitlist-modal__submit,
